@@ -20,7 +20,7 @@ export default function Home() {
         <p>Ответ от Go:
             <b> {isLoading ? 'Загрузка...' : data?.data.message}</b>
         </p>
-          <TelegramAuthButton botUsername={'autopost_auth_bot'} buttonSize={'large'} requestAccess={true}/>
+          <TelegramAuthButton buttonSize={'large'} requestAccess={true}/>
       </main>
   )
 }
