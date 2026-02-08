@@ -1,30 +1,36 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
+	"autopost/internal/http/action"
+	"autopost/internal/http/middleware"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// 1. Описываем маршрут (роут).
-	// При обращении к корню "/" будет срабатывать эта функция
-	http.HandleFunc("/health/check", func(w http.ResponseWriter, r *http.Request) {
-		// Устанавливаем заголовок, что мы отправляем JSON
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Content-Type", "application/json")
+	r := gin.Default()
 
-		// Создаем данные для ответа
-		response := map[string]string{"message": "hello world"}
+	middleware.InitMiddlewares(r)
 
-		// Кодируем данные в JSON и отправляем клиенту
-		json.NewEncoder(w).Encode(response)
-	})
+	api := r.Group("/api/v1")
+	{
+		healthGroup := api.Group("/health")
+		{
+			healthGroup.GET("/check", action.HealthAction)
+		}
 
-	log.Println("Сервер запущен на порту :8080")
+		postGroup := api.Group("/posts")
+		{
+			postGroup.GET("/", func(c *gin.Context) {
+				c.JSON(200, gin.H{
+					"message": "posts (from Go!)",
+				})
+			})
+		}
+	}
 
-	// 2. Запускаем сервер на порту 8080
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
+	err := r.Run()
+	if err != nil {
+		return
 	}
 }
