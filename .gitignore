@@ -1,38 +1,48 @@
-# Binaries
-*.exe
-*.dll
-*.so
-*.dylib
-bin/
-dist/
-
-# Test binary
-*.test
-
-# Output of the go coverage tool
-*.out
-
-# Go workspace file
-go.work
-
-# Environment variables
-.env
-.env.local
-.env.production
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
+# === General (Общее) ===
 .DS_Store
 Thumbs.db
-
-# Logs
+.vscode/
+.idea/
 *.log
+*.swp
+.env
+.env.local
 
-# Dependencies
-vendor/
+
+# === Go Backend (Бэкенд) ===
+# Игнорируем скомпилированные бинарники
+backend/api-server
+backend/backend
+# Если у тебя есть папка bin
+bin/
+# Тестовые файлы
+backend/*.test
+# Вывод покрытия тестами
+backend/coverage.out
+
+
+# === Next.js Frontend (Фронтенд) ===
+# Зависимости (самая тяжелая папка)
+frontend/node_modules/
+# Сборка Next.js
+frontend/.next/
+frontend/out/
+# Кеш инструментов
+frontend/.turbo/
+frontend/.eslintcache
+# Переменные окружения (секреты)
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+# Логи npm/yarn
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+
+# === Infrastructure / CI/CD (Инфраструктура) ===
+# Если ты хранишь ключи для сервера локально (никогда не коммить их!)
+*.pem
+*.key
+id_rsa

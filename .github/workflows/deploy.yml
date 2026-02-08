@@ -1,14 +1,12 @@
-name: Deploy to VPS
+name: Deploy Autopost (Go + Next.js)
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  test:
-    name: Run Tests
+  test-and-build-check:
+    name: Test and Build Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,26 +17,24 @@ jobs:
         with:
           go-version: '1.25'
 
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Run tests
-        run: go test -v ./...
-
-      - name: Build
-        run: go build -v ./cmd/api
+      - name: Backend Tests
+        run: |
+          cd backend
+          go mod download
+          go test -v ./...
+          go build -v ./cmd/api/server.go # Проверяем, что компилируется
 
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+    needs: test-and-build-check
+    if: github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to VPS
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -46,13 +42,36 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /root/scrumno-api
+            # 1. Заходим в папку проекта
+            cd /root/autopost
+            
+            # 2. Обновляем код
             git pull origin main
-            go mod download
-            sudo systemctl restart scrumno-api
-            sudo systemctl status scrumno-api --no-pager
 
-      - name: Check deployment
+            # 3. Обновляем Бэкенд
+            echo "Building Go backend..."
+            cd /root/autopost/backend
+            go mod download
+            go build -o api-server ./cmd/api/server.go
+            
+            # 4. Обновляем Фронтенд
+            echo "Building Next.js frontend..."
+            cd /root/autopost/frontend
+            # Используем полный путь к npm из твоей версии nvm
+            export PATH=$PATH:/root/.nvm/versions/node/v24.13.0/bin
+            npm install
+            npm run build
+
+            # 5. Перезапускаем сервисы
+            echo "Restarting services..."
+            systemctl restart autopost
+            systemctl restart nextjs
+
+            # 6. Проверка статуса
+            systemctl is-active --quiet autopost && echo "Go service is UP" || echo "Go service FAILED"
+            systemctl is-active --quiet nextjs && echo "Next.js service is UP" || echo "Next.js service FAILED"
+
+      - name: Health Check
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -60,5 +79,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            sleep 5
-            curl -f http://localhost:8080/health || exit 1
+            sleep 10
+            # Проверяем бэкенд (на порту 8080 или через домен /api/)
+            curl -f http://localhost:8080/health/check || exit 1
+            # Проверяем фронтенд (на порту 3000)
+            curl -f http://localhost:3000/ || exit 1
