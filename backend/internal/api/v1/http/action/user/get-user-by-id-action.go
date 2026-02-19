@@ -17,8 +17,10 @@ func NewGetUserByIDAction(fetcher *getUserByID.Fetcher) *GetUserByIDAction {
 }
 
 func (a *GetUserByIDAction) Action(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	id := vars["id"]
+
 	if id == "" {
 		utils.JSONResponse(w, map[string]string{"error": "id is required"}, http.StatusBadRequest)
 		return
