@@ -14,6 +14,6 @@ type Actions struct {
 	GetUserByPhone *userAction.GetUserByPhoneAction
 	GetAllUsers    *userAction.GetAllUsersAction
 	CreateUser     *userAction.CreateUserAction
-	UpdateUser     *userAction.UpdateUserAction
+	UpdateUserById *userAction.UpdateUserByIdAction
 	DeleteUser     *userAction.DeleteUserAction
 }

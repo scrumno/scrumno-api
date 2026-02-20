@@ -1,6 +1,9 @@
 package user
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type UserRepositoryInterface interface {
 	GetByID(ID string) (User, error)
@@ -8,7 +11,7 @@ type UserRepositoryInterface interface {
 	GetAllUsers() ([]User, error)
 	Create(user User) (User, error)
 	Delete(ID string) error
-	Update(ID string, updates map[string]interface{}) (User, error)
+	UpdateById(ID uuid.UUID, data map[string]interface{}) (User, error)
 }
 
 type UserRepository struct {
@@ -65,14 +68,14 @@ func (r *UserRepository) Delete(ID string) error {
 	return result.Error
 }
 
-func (r *UserRepository) Update(ID string, updates map[string]interface{}) (User, error) {
+func (r *UserRepository) UpdateById(ID uuid.UUID, data map[string]interface{}) (User, error) {
 	var u User
 
 	if err := r.db.First(&u, "id = ?", ID).Error; err != nil {
 		return User{}, err
 	}
 
-	if err := r.db.Model(&u).Updates(updates).Error; err != nil {
+	if err := r.db.Model(&u).Updates(data).Error; err != nil {
 		return User{}, err
 	}
 

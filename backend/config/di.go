@@ -8,7 +8,7 @@ import (
 	checkStatusConnectDB "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	deleteUser "github.com/scrumno/scrumno-api/internal/users/command/delete-user"
-	updateUser "github.com/scrumno/scrumno-api/internal/users/command/update-user"
+	updateUserById "github.com/scrumno/scrumno-api/internal/users/command/update-user-by-id"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 	getAllUsers "github.com/scrumno/scrumno-api/internal/users/query/get-all-users"
 	getUserByID "github.com/scrumno/scrumno-api/internal/users/query/get-user-by-id"
@@ -22,7 +22,7 @@ func DI() *action.Actions {
 	// service
 
 	// command
-	updateUserHandler := updateUser.NewHandler(userRepo)
+	updateUserHandler := updateUserById.NewHandler(userRepo)
 	deleteUserHandler := deleteUser.NewHandler(userRepo) // добавил
 	createUserHandler := createUser.NewHandler(userRepo) // добавил
 
@@ -38,7 +38,7 @@ func DI() *action.Actions {
 		GetUserByPhone:       userAction.NewGetUserByPhoneAction(getUserByPhoneFetcher),
 		GetAllUsers:          userAction.NewGetAllUsersAction(getAllUsersFetcher), // добавил
 		CreateUser:           userAction.NewCreateUserAction(createUserHandler),   // добавил
-		UpdateUser:           userAction.NewUpdateUserAction(updateUserHandler),   // добавил
-		DeleteUser:           userAction.NewDeleteUserAction(deleteUserHandler),   //добавил
+		UpdateUserById:       userAction.NewUpdateUserByIdAction(updateUserHandler),
+		DeleteUser:           userAction.NewDeleteUserAction(deleteUserHandler), //добавил
 	}
 }
