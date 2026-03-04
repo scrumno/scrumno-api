@@ -39,6 +39,6 @@ type Venue struct {
 	PaidUntil     *time.Time                  `                                         json:"paid_until,omitempty"`
 
 	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt *time.Time `                       json:"updated_at,omitempty"`
+	UpdatedAt *time.Time `                      json:"updated_at,omitempty"`
 	DeletedAt *time.Time `gorm:"index"          json:"deleted_at,omitempty"`
 }
