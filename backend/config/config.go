@@ -6,10 +6,19 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	Iiko     IikoConfig
 }
 
 type JWTConfig struct {
 	SecretKey []byte
+}
+
+type IikoConfig struct {
+	BaseURL        string
+	Login          string
+	Password       string
+	OrganizationID string
+	TerminalID     string
 }
 
 func Load() *Config {
@@ -30,6 +39,13 @@ func Load() *Config {
 		},
 		JWT: JWTConfig{
 			SecretKey: secretKey,
+		},
+		Iiko: IikoConfig{
+			BaseURL:        utils.GetEnv("IIKO_BASE_URL", "https://990-418-833.iiko.it/resto/"),
+			Login:          utils.GetEnv("IIKO_LOGIN", ""),
+			Password:       utils.GetEnv("IIKO_PASSWORD", ""),
+			OrganizationID: utils.GetEnv("IIKO_ORGANIZATION_ID", ""),
+			TerminalID:     utils.GetEnv("IIKO_TERMINAL_ID", ""),
 		},
 	}
 }
