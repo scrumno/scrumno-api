@@ -84,6 +84,8 @@ func (a *AuthorizeAction) Action(w http.ResponseWriter, r *http.Request) {
 	tokensCmd := createAuthorizeTokensHandler.Command{
 		Phone:  user.Phone,
 		UserID: user.ID,
+		SessionID: "",
+		RevokePreviousToken: false,
 	}
 
 	accessToken, refreshToken, expiresIn, err := a.CreateAuthorizeTokensHandler.Handle(r.Context(), tokensCmd)

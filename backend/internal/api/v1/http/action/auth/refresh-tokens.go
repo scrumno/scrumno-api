@@ -84,6 +84,8 @@ func (a *RefreshTokensAction) Action(w http.ResponseWriter, r *http.Request) {
 	accessToken, refreshToken, expiresIn, err := a.CreateAuthorizeTokensHandler.Handle(r.Context(), createAuthorizeTokensHandler.Command{
 		Phone: user.Phone,
 		UserID: user.ID,
+		SessionID: claims.SessionID,
+		RevokePreviousToken: true,
 	})
 	if err != nil {
 		utils.JSONResponse(w, RefreshTokensErrorResponse{

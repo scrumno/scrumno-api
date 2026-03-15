@@ -26,8 +26,11 @@ func NewHandler(
 
 func (h *Handler) Handle(ctx context.Context, cmd Command) (string, string, int64, error) {
 
-	if err := h.tokenRepo.RevokeTokensByUserSessionId(ctx, cmd.UserID); err != nil {
-		return "", "", 0, err
+	if (cmd.RevokePreviousToken && cmd.SessionID != "") {
+		err := h.tokenRepo.RevokeTokenBySessionId(ctx, cmd.SessionID)
+		if err != nil {
+			return "", "", 0, err
+		}
 	}
 
 	sessionID := uuid.New()
@@ -54,5 +57,5 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (string, string, int6
 		return "", "", 0, err
 	}
 
-	return pair.RefreshToken, pair.AccessToken, pair.ExpiresIn, nil
+	return pair.AccessToken, pair.RefreshToken, pair.ExpiresIn, nil
 }

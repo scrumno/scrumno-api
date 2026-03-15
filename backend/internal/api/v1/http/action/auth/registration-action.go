@@ -103,6 +103,8 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 		createAuthorizeTokensHandler.Command{
 			Phone:  createdUser.Phone,
 			UserID: createdUser.ID,
+			SessionID: "",
+			RevokePreviousToken: false,
 		},
 	)
 	if err != nil {

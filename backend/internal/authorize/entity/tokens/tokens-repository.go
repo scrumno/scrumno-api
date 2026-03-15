@@ -14,8 +14,9 @@ import (
 type TokensRepository interface {
 	base.BaseRepository[AuthorizeToken]
 	FindTokenPairBySessionId(ctx context.Context, sessionID string) (*AuthorizeToken, error)
-	RevokeTokensByUserSessionId(ctx context.Context, sessionID uuid.UUID) error
+	RevokeTokensByUserSessionId(ctx context.Context, userID uuid.UUID) error
 	IsSessionActive(ctx context.Context, sessionID string) (bool, error)
+	RevokeTokenBySessionId(ctx context.Context, sessionID string) error
 }
 
 type tokensGormRepository struct {
@@ -50,6 +51,21 @@ func (r *tokensGormRepository) RevokeTokensByUserSessionId(ctx context.Context, 
 		Model(&ac).
 		Where("user_id = ?", userID).
 		Where("expires_at > ?", time.Now().Unix()).
+		Update("expires_at", time.Now().Unix()).Error
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *tokensGormRepository) RevokeTokenBySessionId(ctx context.Context, sessionID string) error {
+	var ac AuthorizeToken
+	
+	err := r.DB.WithContext(ctx).
+		Model(&ac).
+		Where("id = ?", sessionID).
 		Update("expires_at", time.Now().Unix()).Error
 
 	if err != nil {
