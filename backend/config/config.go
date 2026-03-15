@@ -6,10 +6,16 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	Sms      SmsConfig
 }
 
 type JWTConfig struct {
 	SecretKey []byte
+}
+
+type SmsConfig struct {
+	ApiKey string
+	ApiPhoneNumber string
 }
 
 func Load() *Config {
@@ -30,6 +36,10 @@ func Load() *Config {
 		},
 		JWT: JWTConfig{
 			SecretKey: secretKey,
+		},
+		Sms: SmsConfig{
+			ApiKey: utils.GetEnv("SMS_API_KEY", ""),
+			ApiPhoneNumber: utils.GetEnv("SMS_API_PHONE_NUMBER", ""),
 		},
 	}
 }

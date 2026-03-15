@@ -1,0 +1,187 @@
+{
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "info": {
+        "name": "/auth API",
+        "description": "Сгенерированная коллекция API запросов для самовывоза",
+        "version": "",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "auth",
+            "item": [
+                {
+                    "name": "registration",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/auth/registration",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "registration"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"1234\",\n  \"phone\": \"79099000000\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "authorize",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/auth/authorize",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "authorize"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"1234\",\n  \"phone\": \"79099000000\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "logout",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"phone\": \"79099000000\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "sms-code",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/auth/sms-code",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "sms-code"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"codeType\": \"authorize\",\n  \"phone\": \"79090000000\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "refresh-tokens",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/auth/refresh-tokens",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "refresh-tokens"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiN2VmN2Q0OTgtYmU4Yy00ZGRkLTljM2UtMTY2MGFjODVkYWIxIiwicGhvbmUiOiI3OTE0NzgxNzgzMiIsInV1aWQiOiIiLCJzZXNzaW9uX2lkIjoiNTc5YWUyZjQtZDhjMS00YTdkLWFlN2QtZTM2YmQzNmI2YjBiIiwic3ViIjoiN2VmN2Q0OTgtYmU4Yy00ZGRkLTljM2UtMTY2MGFjODVkYWIxIiwiZXhwIjoxNzc0MDcwNDUyLCJpYXQiOjE3NzM0NjU2NTJ9.Qh3PL4RooYM9QxJfhREiRC0C2xDsSZb6v_hZWC5FN4U\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "type": "string",
+            "value": "http://localhost:8087/api/v1"
+        }
+    ]
+}

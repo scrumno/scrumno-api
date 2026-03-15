@@ -5,8 +5,8 @@ import (
 	"log"
 	"github.com/scrumno/scrumno-api/config"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
-	"github.com/scrumno/scrumno-api/internal/api/v1/middleware"
 	"github.com/scrumno/scrumno-api/internal/api/v1/collector"
+	"github.com/scrumno/scrumno-api/internal/api/v1/middleware"
 )
 
 // SetupRouter создаёт маршруты
@@ -23,6 +23,10 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	health := api.PathPrefix(healthPrefix).Subrouter()
 
 	collectorRoutes := collector.NewEndpointCollector()
+
+	if actions.JWTManager != nil {
+		health.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
+	}
 
 	collectorRoutes.HandleFuncWithPostman(
         health,
@@ -43,26 +47,69 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
     )
 
 	userPrefix := "/users"
-
 	user := api.PathPrefix(userPrefix).Subrouter()
 
-	collectorRoutes.HandleFuncWithPostman(
-        user,
-		userPrefix,
-        actions.CheckStatusConnectDB.Action,
-        actions.CheckStatusConnectDB.GetInputType(),
-        "GET",
-        "/users",
-    )
+	if actions.JWTManager != nil {
+		user.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
+	}
 
 	collectorRoutes.HandleFuncWithPostman(
         user,
 		userPrefix,
-        actions.CheckStatusConnectDB.Action,
-        actions.CheckStatusConnectDB.GetInputType(),
-        "GET",
-        "/usersusersuser/us",
+        actions.CreateUser.Action,
+        actions.CreateUser.GetInputType(),
+        "POST",
+        "/{phone}",
     )
+
+	authPrefix := "/auth"
+
+	auth := api.PathPrefix(authPrefix).Subrouter()
+
+	collectorRoutes.HandleFuncWithPostman(
+		auth,
+		authPrefix,
+		actions.Registration.Action,
+		actions.Registration.GetInputType(),
+		"POST",
+		"/registration",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		auth,
+		authPrefix,
+		actions.Authorize.Action,
+		actions.Authorize.GetInputType(),
+		"POST",
+		"/authorize",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		auth,
+		authPrefix,
+		actions.Logout.Action,
+		actions.Logout.GetInputType(),
+		"POST",
+		"/logout",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		auth,
+		authPrefix,
+		actions.SmsCode.Action,
+		actions.SmsCode.GetInputType(),
+		"POST",
+		"/sms-code",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		auth,
+		authPrefix,
+		actions.RefreshTokens.Action,
+		actions.RefreshTokens.GetInputType(),
+		"POST",
+		"/refresh-tokens",
+	)
 
 	err := collectorRoutes.GeneratePostmanCollections()
 	if err != nil {

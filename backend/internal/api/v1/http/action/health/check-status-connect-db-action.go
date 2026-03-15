@@ -3,7 +3,6 @@ package health
 import (
 	"net/http"
 	"reflect"
-	"log"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
 	checkStatus "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
