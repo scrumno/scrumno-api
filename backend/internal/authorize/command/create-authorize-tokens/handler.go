@@ -24,7 +24,11 @@ func NewHandler(
 	}
 }
 
-func (h *Handler) Handle(ctx context.Context, cmd Command) (string, string, int64, error) {	
+func (h *Handler) Handle(ctx context.Context, cmd Command) (string, string, int64, error) {
+
+	if err := h.tokenRepo.RevokeTokensByUserSessionId(ctx, cmd.UserID); err != nil {
+		return "", "", 0, err
+	}
 
 	sessionID := uuid.New()
 
