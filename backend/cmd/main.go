@@ -52,7 +52,7 @@ func main() {
 		}
 	}()
 
-	actions := config.DI()
+	actions := config.DI(cfg)
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port

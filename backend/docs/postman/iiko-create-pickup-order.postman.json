@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "iiko - Create Pickup Order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "POST /api/v1/iiko/orders/pickup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/iiko/orders/pickup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "v1", "iiko", "orders", "pickup"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer\": {\n    \"name\": \"Иван\",\n    \"phone\": \"+79990000000\"\n  },\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"comment\": \"Самовывоз, тестовый заказ\",\n  \"pickupAt\": \"{{pickupAt}}\"\n}\n"
+        },
+        "description": "Создаёт заказ самовывоза в iiko.\n\nПорядок использования:\n1) Вызови /iiko/organizations, скопируй organizationId (и при необходимости пропиши его в .env или используй как query).\n2) Вызови /iiko/nomenclature?organizationId=..., из ответа возьми нужный productId и подставь в {{productId}}.\n3) Здесь задай {{pickupAt}} (или убери поле, если не нужно) и отправь запрос. Новый заказ должен появиться в iikoFront."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "pickupAt",
+      "value": ""
+    }
+  ]
+}
+

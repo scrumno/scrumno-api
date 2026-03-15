@@ -116,5 +116,13 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
         log.Printf("Ошибка генерации Postman: %v", err)
     }
 
+	iiko := api.PathPrefix("/iiko").Subrouter()
+	iiko.HandleFunc("/orders/pickup", actions.CreateIikoPickupOrder.Action).Methods("POST")
+	iiko.HandleFunc("/organizations", actions.GetIikoOrganizations.Action).Methods("GET")
+
+	nomenclature := iiko.PathPrefix("/nomenclature").Subrouter()
+	nomenclature.Use(middleware.RequireOrganizationID)
+	nomenclature.HandleFunc("", actions.GetIikoNomenclature.Action).Methods("GET")
+
 	return router
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
+	iikoAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/iiko"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	logout "github.com/scrumno/scrumno-api/internal/authorize/command/logout"
@@ -17,6 +18,8 @@ import (
 	checkStatusConnectDB "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
+	"github.com/scrumno/scrumno-api/internal/users/entity/user"
+	internalIiko "github.com/scrumno/scrumno-api/internal/iiko"
 	"github.com/scrumno/scrumno-api/shared/factory"
 	"github.com/scrumno/scrumno-api/shared/jwt"
 	findUSerByPhoneQuery "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
@@ -71,6 +74,9 @@ func DI() *action.Actions {
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
+	// external clients
+	iikoClient := internalIiko.NewClient(cfg.Iiko)
+
 	return &action.Actions{
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
@@ -85,5 +91,10 @@ func DI() *action.Actions {
 
 		JWTManager: jwtManager,
 		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
+
+		// iiko
+		CreateIikoPickupOrder: iikoAction.NewCreatePickupOrderAction(iikoClient),
+		GetIikoOrganizations:  iikoAction.NewGetOrganizationsAction(iikoClient),
+		GetIikoNomenclature:   iikoAction.NewGetNomenclatureAction(iikoClient),
 	}
 }

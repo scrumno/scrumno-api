@@ -1,0 +1,32 @@
+{
+  "info": {
+    "name": "iiko - Get Nomenclature (Products)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /api/v1/iiko/nomenclature",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/iiko/nomenclature?organizationId={{organizationId}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "v1", "iiko", "nomenclature"],
+          "query": [
+            {
+              "key": "organizationId",
+              "value": "{{organizationId}}",
+              "description": "ID организации из ответа /iiko/organizations"
+            }
+          ]
+        },
+        "description": "Возвращает номенклатуру (товары, группы и т.п.) для указанной организации. Из ответа бери productId для формирования заказа."
+      },
+      "response": []
+    }
+  ]
+}
+
