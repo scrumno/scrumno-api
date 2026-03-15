@@ -49,6 +49,7 @@ func (r *tokensGormRepository) RevokeTokensByUserSessionId(ctx context.Context, 
 	err := r.DB.WithContext(ctx).
 		Model(&ac).
 		Where("user_id = ?", userID).
+		Where("expires_at > ?", time.Now().Unix()).
 		Update("expires_at", time.Now().Unix()).Error
 
 	if err != nil {
