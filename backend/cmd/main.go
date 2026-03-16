@@ -12,6 +12,8 @@ import (
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
 	staffrole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
+	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
+    tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 )
 
 func main() {
@@ -36,6 +38,8 @@ func main() {
 	if err := config.Migrate(
 		&user.User{},
 		&staffrole.StaffRole{},
+		&codes.AuthorizeCode{},
+		&tokens.AuthorizeToken{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)
@@ -48,7 +52,7 @@ func main() {
 		}
 	}()
 
-	actions := config.DI()
+	actions := config.DI(cfg)
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port
