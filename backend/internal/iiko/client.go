@@ -3,6 +3,8 @@ package iiko
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,8 +15,6 @@ import (
 	"path"
 	"strings"
 	"time"
-
-	"github.com/scrumno/scrumno-api/config"
 )
 
 // Client определяет интерфейс работы с iikoRMS.
@@ -22,14 +22,24 @@ type Client interface {
 	CreatePickupOrder(ctx context.Context, order PickupOrder) (*CreateOrderResult, error)
 	GetOrganizations(ctx context.Context) (*CreateOrderResult, error)
 	GetNomenclature(ctx context.Context, organizationID string) (*CreateOrderResult, error)
+	GetTerminals(ctx context.Context) (*CreateOrderResult, error)
+}
+
+// Config — локальный конфиг iiko‑клиента, чтобы не тянуть пакет config и не создавать цикл импортов.
+type Config struct {
+	BaseURL        string
+	Login          string
+	Password       string
+	OrganizationID string
+	TerminalID     string
 }
 
 type client struct {
-	cfg    config.IikoConfig
+	cfg    Config
 	client *http.Client
 }
 
-func NewClient(cfg config.IikoConfig) Client {
+func NewClient(cfg Config) Client {
 	httpClient := &http.Client{
 		Timeout: 15 * time.Second,
 		Transport: &http.Transport{
@@ -48,8 +58,10 @@ func NewClient(cfg config.IikoConfig) Client {
 const (
 	authPath          = "api/auth"
 	createOrderPath   = "api/deliveries/create"
-	organizationsPath = "api/organization/list"
-	nomenclaturePath  = "api/nomenclature"
+	organizationsPath = "api/corporation/departments"
+	terminalsPath     = "api/corporation/terminals"
+	// products list (номенклатура) по RMS-документации: /resto/api/v2/entities/products/list
+	nomenclaturePath = "api/v2/entities/products/list"
 )
 
 func (c *client) CreatePickupOrder(ctx context.Context, order PickupOrder) (*CreateOrderResult, error) {
@@ -132,9 +144,16 @@ func (c *client) auth(ctx context.Context) (string, error) {
 	}
 	u.Path = path.Join(u.Path, authPath)
 
+	// iiko ожидает SHA1-хеш пароля, а не сырой пароль.
+	hasher := sha1.New()
+	if _, err := hasher.Write([]byte(c.cfg.Password)); err != nil {
+		return "", fmt.Errorf("build password hash: %w", err)
+	}
+	passHash := hex.EncodeToString(hasher.Sum(nil))
+
 	q := u.Query()
 	q.Set("login", c.cfg.Login)
-	q.Set("pass", c.cfg.Password)
+	q.Set("pass", passHash)
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -229,10 +248,6 @@ func (c *client) GetNomenclature(ctx context.Context, organizationID string) (*C
 		return nil, fmt.Errorf("iiko config is not fully set")
 	}
 
-	if organizationID == "" {
-		return nil, fmt.Errorf("organizationID is required")
-	}
-
 	token, err := c.auth(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("iiko auth error: %w", err)
@@ -246,7 +261,9 @@ func (c *client) GetNomenclature(ctx context.Context, organizationID string) (*C
 
 	q := u.Query()
 	q.Set("key", token)
-	q.Set("organizationId", organizationID)
+	// API products/list не принимает organizationId, поэтому здесь его не используем.
+	// Можно дополнительно фильтровать по типам/категориям, но для демо достаточно includeDeleted=false.
+	q.Set("includeDeleted", "false")
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
@@ -274,6 +291,61 @@ func (c *client) GetNomenclature(ctx context.Context, organizationID string) (*C
 			StatusCode: resp.StatusCode,
 			Body:       body,
 		}, fmt.Errorf("iiko get nomenclature failed with status %d", resp.StatusCode)
+	}
+
+	return &CreateOrderResult{
+		StatusCode: resp.StatusCode,
+		Body:       body,
+	}, nil
+}
+
+// GetTerminals запрашивает список терминалов предприятия.
+func (c *client) GetTerminals(ctx context.Context) (*CreateOrderResult, error) {
+	if c.cfg.BaseURL == "" || c.cfg.Login == "" || c.cfg.Password == "" {
+		return nil, fmt.Errorf("iiko config is not fully set")
+	}
+
+	token, err := c.auth(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("iiko auth error: %w", err)
+	}
+
+	u, err := url.Parse(c.cfg.BaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse base url: %w", err)
+	}
+	u.Path = path.Join(u.Path, terminalsPath)
+
+	q := u.Query()
+	q.Set("key", token)
+	q.Set("revisionFrom", "-1")
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("build get terminals request: %w", err)
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("send get terminals request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read get terminals response: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		slog.Error("iiko get terminals failed",
+			"status", resp.StatusCode,
+			"body", string(body),
+		)
+		return &CreateOrderResult{
+			StatusCode: resp.StatusCode,
+			Body:       body,
+		}, fmt.Errorf("iiko get terminals failed with status %d", resp.StatusCode)
 	}
 
 	return &CreateOrderResult{

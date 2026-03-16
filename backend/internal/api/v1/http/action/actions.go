@@ -29,4 +29,5 @@ type Actions struct {
 	CreateIikoPickupOrder *iikoAction.CreatePickupOrderAction
 	GetIikoOrganizations  *iikoAction.GetOrganizationsAction
 	GetIikoNomenclature   *iikoAction.GetNomenclatureAction
+	GetIikoTerminals      *iikoAction.GetTerminalsAction
 }
