@@ -119,6 +119,7 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	iiko := api.PathPrefix("/iiko").Subrouter()
 	iiko.HandleFunc("/orders/pickup", actions.CreateIikoPickupOrder.Action).Methods("POST")
 	iiko.HandleFunc("/organizations", actions.GetIikoOrganizations.Action).Methods("GET")
+	iiko.HandleFunc("/terminals", actions.GetIikoTerminals.Action).Methods("GET")
 
 	nomenclature := iiko.PathPrefix("/nomenclature").Subrouter()
 	nomenclature.Use(middleware.RequireOrganizationID)

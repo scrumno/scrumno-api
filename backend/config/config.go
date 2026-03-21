@@ -1,6 +1,11 @@
 package config
 
-import "github.com/scrumno/scrumno-api/shared/utils"
+import (
+	"strconv"
+	"time"
+
+	"github.com/scrumno/scrumno-api/shared/utils"
+)
 
 type Config struct {
 	Server   ServerConfig
@@ -11,7 +16,7 @@ type Config struct {
 }
 
 type JWTConfig struct {
-	SecretKey []byte
+	SecretKey string
 	AccessTokenTtl time.Duration
 	RefreshTokenTtl time.Duration
 	AccessSecret string
@@ -32,6 +37,9 @@ type IikoConfig struct {
 }
 
 func Load() *Config {
+	accessTokenTtl, _ := strconv.Atoi(utils.GetEnv("JWT_ACCESS_TOKEN_TTL", "15"))
+	refreshTokenTtl, _ := strconv.Atoi(utils.GetEnv("JWT_REFRESH_TOKEN_TTL", "10080"))
+
 	return &Config{
 		Server: ServerConfig{
 			Port: utils.GetEnv("SERVER_PORT", "8080"),
@@ -48,8 +56,8 @@ func Load() *Config {
 			SecretKey: utils.GetEnv("JWT_SECRET", ""),
 			AccessSecret:    utils.GetEnv("JWT_ACCESS_SECRET", ""),
 			RefreshSecret:   utils.GetEnv("JWT_REFRESH_SECRET", ""),
-			AccessTokenTtl:  utils.GetEnv("JWT_ACCESS_TOKEN_TTL", "900"),
-			RefreshTokenTtl: utils.GetEnv("JWT_REFRESH_TOKEN_TTL", "604800"),
+			AccessTokenTtl:  time.Duration(accessTokenTtl) * time.Second,
+			RefreshTokenTtl: time.Duration(refreshTokenTtl) * time.Second,
 		},
 		Sms: SmsConfig{
 			ApiKey: utils.GetEnv("SMS_API_KEY", ""),

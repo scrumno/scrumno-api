@@ -1,16 +1,18 @@
 package config
 
 import (
-	"time"
+	"log/slog"
 
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
-	iikoAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/iiko"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	iikoAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/iiko"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
+	checkOnetimeCodeCommand "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
+	createAuthorizeCodeCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
+	createAuthorizeTokensCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
+	createUserCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-user"
 	logout "github.com/scrumno/scrumno-api/internal/authorize/command/logout"
-	getRefreshTokensAvailable "github.com/scrumno/scrumno-api/internal/authorize/query/get-refresh-tokens-available"
-	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	authEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
@@ -19,27 +21,33 @@ import (
 	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
 	internalIiko "github.com/scrumno/scrumno-api/internal/iiko"
-	"github.com/scrumno/scrumno-api/shared/jwt"
 	findUSerByPhoneQuery "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
-	"github.com/scrumno/scrumno-api/shared/sms"
-	checkOnetimeCodeCommand "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
-	createUserCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-user"
-	createAuthorizeTokensCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
-	getSmsCodeSendAvailable "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code-send-available"
+	getRefreshTokensAvailable "github.com/scrumno/scrumno-api/internal/authorize/query/get-refresh-tokens-available"
 	getSmsCode "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code"
-	createAuthorizeCodeCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
+	getSmsCodeSendAvailable "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code-send-available"
+	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
+	"github.com/scrumno/scrumno-api/shared/jwt"
+	"github.com/scrumno/scrumno-api/shared/sms"
 )
 
 func DI(cfg *Config) *action.Actions {
 
-	smsService := sms.NewSmsService(cfg.Sms)
+	smsService := sms.NewSmsService(sms.Config{
+		ApiKey: cfg.Sms.ApiKey,
+		ApiPhoneNumber: cfg.Sms.ApiPhoneNumber,
+	})
 	// repository
 	statusRepo := status.NewStatusRepository(DB)
 	registrationRepo := authEntity.NewRegistrationRepository(DB)
 	tokensRepo := tokens.NewTokensRepository(DB)
 	codesRepo := codes.NewSmsCodesRepository(DB)
 
-	jwtManager := jwt.NewManager(cfg.JWT)
+	jwtManager := jwt.NewManager(jwt.Config{
+		AccessSecret: cfg.JWT.AccessSecret,
+		RefreshSecret: cfg.JWT.RefreshSecret,
+		AccessTokenTtl: cfg.JWT.AccessTokenTtl,
+		RefreshTokenTtl: cfg.JWT.RefreshTokenTtl,
+	})
 
 	// service
 	checkStatusFetcher := checkStatusConnectDB.NewFetcher(statusRepo)
@@ -63,7 +71,21 @@ func DI(cfg *Config) *action.Actions {
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
 	// external clients
-	iikoClient := internalIiko.NewClient(cfg.Iiko)
+	slog.Info("IIKO_CONFIG",
+		"baseURL", cfg.Iiko.BaseURL,
+		"login", cfg.Iiko.Login,
+		"password_set", cfg.Iiko.Password != "",
+		"orgID", cfg.Iiko.OrganizationID,
+		"terminalID", cfg.Iiko.TerminalID,
+	)
+
+	iikoClient := internalIiko.NewClient(internalIiko.Config{
+		BaseURL:        cfg.Iiko.BaseURL,
+		Login:          cfg.Iiko.Login,
+		Password:       cfg.Iiko.Password,
+		OrganizationID: cfg.Iiko.OrganizationID,
+		TerminalID:     cfg.Iiko.TerminalID,
+	})
 
 	return &action.Actions{
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
@@ -84,5 +106,6 @@ func DI(cfg *Config) *action.Actions {
 		CreateIikoPickupOrder: iikoAction.NewCreatePickupOrderAction(iikoClient),
 		GetIikoOrganizations:  iikoAction.NewGetOrganizationsAction(iikoClient),
 		GetIikoNomenclature:   iikoAction.NewGetNomenclatureAction(iikoClient),
+		GetIikoTerminals:      iikoAction.NewGetTerminalsAction(iikoClient),
 	}
 }

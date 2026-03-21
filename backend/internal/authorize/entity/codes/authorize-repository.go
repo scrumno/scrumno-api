@@ -11,12 +11,12 @@ import (
 )
 
 var (
-	ErrRateLimitTooFrequent = errors.New("Повторная отправка возможна через 2 минуты")
+	ErrRateLimitTooFrequent = errors.New("Повторная отправка возможна через 1 минуту")
 	ErrRateLimitHourly      = errors.New("Превышен лимит запросов в час")
 )
 
 const (
-	minIntervalBetweenCodes = 2 * time.Minute
+	minIntervalBetweenCodes = 1 * time.Minute
 	maxCodesPerHour         = 5
 )
 
