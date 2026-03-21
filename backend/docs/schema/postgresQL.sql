@@ -116,15 +116,6 @@ CREATE TABLE "app_configs" (
   "updated_at" timestamptz
 );
 
-CREATE TABLE "users" (
-  "id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
-  "phone" varchar UNIQUE NOT NULL,
-  "full_name" varchar,
-  "birth_date" date,
-  "iiko_guest_id" uuid,
-  "is_active" boolean DEFAULT true,
-  "created_at" timestamptz DEFAULT (now())
-);
 
 CREATE TABLE "staff_roles" (
   "id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -492,11 +483,11 @@ COMMENT ON COLUMN "users"."full_name" IS 'Имя клиента. NULL при р�
 
 COMMENT ON COLUMN "users"."birth_date" IS 'Дата рождения. NULL — заполняется опционально в профиле. Для именинных акций. Хранить без времени (тип DATE)';
 
-COMMENT ON COLUMN "users"."iiko_guest_id" IS 'ID гостя в iikoCard. NULL до первого заказа. При первом заказе: создать гостя в iiko → сохранить ID → создать заказ';
-
 COMMENT ON COLUMN "users"."is_active" IS 'false = мягкая блокировка или удаление по запросу (152-ФЗ). При false: 401 на все запросы. Данные не удалять';
 
 COMMENT ON COLUMN "users"."created_at" IS 'Дата регистрации. Только для чтения';
+
+COMMENT ON COLUMN "users"."email" IS 'Email в профиле. NULL до заполнения пользователем.';
 
 COMMENT ON TABLE "staff_roles" IS 'Персонал: один user может быть admin в одном заведении и manager в другом.';
 

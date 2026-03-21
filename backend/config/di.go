@@ -13,14 +13,12 @@ import (
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	authEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
-    tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDB "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
-	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
-	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
-	"github.com/scrumno/scrumno-api/internal/users/entity/user"
+	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
+	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
 	internalIiko "github.com/scrumno/scrumno-api/internal/iiko"
-	"github.com/scrumno/scrumno-api/shared/factory"
 	"github.com/scrumno/scrumno-api/shared/jwt"
 	findUSerByPhoneQuery "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
 	"github.com/scrumno/scrumno-api/shared/sms"
@@ -32,27 +30,16 @@ import (
 	createAuthorizeCodeCommand "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
 )
 
-func DI() *action.Actions {
-	cfg := Load()
+func DI(cfg *Config) *action.Actions {
 
-	smsService := sms.NewSmsService(sms.Config{
-		ApiKey: cfg.Sms.ApiKey,
-		ApiPhoneNumber: cfg.Sms.ApiPhoneNumber,
-	})
-
+	smsService := sms.NewSmsService(cfg.Sms)
 	// repository
 	statusRepo := status.NewStatusRepository(DB)
-	userRepo := factory.NewGormRepository[userEntity.User](DB)
 	registrationRepo := authEntity.NewRegistrationRepository(DB)
 	tokensRepo := tokens.NewTokensRepository(DB)
 	codesRepo := codes.NewSmsCodesRepository(DB)
 
-	jwtManager := jwt.NewManager(jwt.Config{
-		AccessSecret:    string(cfg.JWT.SecretKey),
-		RefreshSecret:   string(cfg.JWT.SecretKey),
-		AccessTokenTtl:  15 * time.Minute,
-		RefreshTokenTtl: 7 * 24 * time.Hour,
-	})
+	jwtManager := jwt.NewManager(cfg.JWT)
 
 	// service
 	checkStatusFetcher := checkStatusConnectDB.NewFetcher(statusRepo)
@@ -61,7 +48,8 @@ func DI() *action.Actions {
 	createUniqueCodeSvc := createUniqueCode.NewCreateUniqueCodeService()
 
 	// command
-	createUserHandler := createUser.NewCreateUserHandler(userRepo)
+	conditionsUpdateProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
+	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsUpdateProfilePolicy)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOnetimeCodeHandler := checkOnetimeCodeCommand.NewHandler(codesRepo)
 	createUserCommandHandler := createUserCommand.NewHandler(registrationRepo)
@@ -81,7 +69,7 @@ func DI() *action.Actions {
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
 		// users
-		CreateUser: userAction.NewCreateUserAction(createUserHandler),
+		UpdateUserProfile: userAction.NewUpdateUserProfileAction(updateUserProfileHandler),
 
 		// auth
 		Registration: authAction.NewRegistrationAction(findUserByPhoneFetcher, checkOnetimeCodeHandler, createUserCommandHandler, createAuthorizeTokensHandler),

@@ -20,19 +20,19 @@
             "name": "users",
             "item": [
                 {
-                    "name": "users",
+                    "name": "update-user-profile",
                     "request": {
                         "url": {
-                            "raw": "{{base_url}}/users/users",
+                            "raw": "{{base_url}}/users/update-user-profile",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "users",
-                                "users"
+                                "update-user-profile"
                             ]
                         },
-                        "method": "GET",
+                        "method": "PUT",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -41,7 +41,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"full_name\": \"Иван Аресньев\",\n  \"phone\": \"79099000000\"\n}",
+                            "raw": "{\n  \"birthDate,omitempty\": \"\",\n  \"email,omitempty\": \"\",\n  \"fullName,omitempty\": \"\",\n  \"isActive,omitempty\": false\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -49,43 +49,6 @@
                             }
                         }
                     }
-                },
-                {
-                    "name": "usersusersuser",
-                    "item": [
-                        {
-                            "name": "us",
-                            "request": {
-                                "url": {
-                                    "raw": "{{base_url}}/users/usersusersuser/us",
-                                    "host": [
-                                        "{{base_url}}"
-                                    ],
-                                    "path": [
-                                        "users",
-                                        "usersusersuser",
-                                        "us"
-                                    ]
-                                },
-                                "method": "GET",
-                                "header": [
-                                    {
-                                        "key": "Content-Type",
-                                        "value": "application/json"
-                                    }
-                                ],
-                                "body": {
-                                    "mode": "raw",
-                                    "raw": "{\n  \"full_name\": \"Иван Аресньев\",\n  \"phone\": \"79099000000\"\n}",
-                                    "options": {
-                                        "raw": {
-                                            "language": "json"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    ]
                 }
             ]
         }
@@ -94,7 +57,7 @@
         {
             "key": "base_url",
             "type": "string",
-            "value": "http://localhost:8084/api/v1"
+            "value": "http://localhost:8087/api/v1"
         }
     ]
 }

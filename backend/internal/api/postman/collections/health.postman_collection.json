@@ -88,7 +88,7 @@
         {
             "key": "base_url",
             "type": "string",
-            "value": "http://localhost:8084/api/v1"
+            "value": "http://localhost:8087/api/v1"
         }
     ]
 }

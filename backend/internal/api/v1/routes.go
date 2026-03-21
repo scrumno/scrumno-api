@@ -53,15 +53,6 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		user.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
 	}
 
-	collectorRoutes.HandleFuncWithPostman(
-        user,
-		userPrefix,
-        actions.CreateUser.Action,
-        actions.CreateUser.GetInputType(),
-        "POST",
-        "/{phone}",
-    )
-
 	authPrefix := "/auth"
 
 	auth := api.PathPrefix(authPrefix).Subrouter()
@@ -111,6 +102,15 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"/refresh-tokens",
 	)
 
+	collectorRoutes.HandleFuncWithPostman(
+		user,
+		userPrefix,
+		actions.UpdateUserProfile.Action,
+		actions.UpdateUserProfile.GetInputType(),
+		"PUT",
+		"/update-user-profile",
+	)
+	
 	err := collectorRoutes.GeneratePostmanCollections()
 	if err != nil {
         log.Printf("Ошибка генерации Postman: %v", err)

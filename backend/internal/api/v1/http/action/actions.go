@@ -13,7 +13,7 @@ type Actions struct {
 	CheckStatusConnectDB *health.CheckStatusConnectDBAction
 
 	// users
-	CreateUser *userAction.CreateUserAction
+	UpdateUserProfile *userAction.UpdateUserProfileAction
 
 	// auth
 	Registration *auth.RegistrationAction

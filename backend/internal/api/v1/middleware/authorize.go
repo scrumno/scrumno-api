@@ -39,6 +39,7 @@ func (m *AuthMiddleware) Authenticator(next http.Handler) http.Handler {
 			if err != nil {
 				utils.JSONResponse(w, ErrorResponse{
 					IsSuccess: false,
+					StatusCode: http.StatusUnauthorized,
 					Error:     err.Error(),
 				}, http.StatusUnauthorized)
 				return
@@ -48,6 +49,7 @@ func (m *AuthMiddleware) Authenticator(next http.Handler) http.Handler {
 			if err != nil {
 				utils.JSONResponse(w, ErrorResponse{
 					IsSuccess: false,
+					StatusCode: http.StatusUnauthorized,
 					Error:     err.Error(),
 				}, http.StatusUnauthorized)
 				return
@@ -90,5 +92,6 @@ func claimsFromContext(ctx context.Context) *jwt.Claims {
 
 type ErrorResponse struct {
 	IsSuccess bool   `json:"isSuccess"`
+	StatusCode int    `json:"statusCode"`
 	Error     string `json:"error"`
 }

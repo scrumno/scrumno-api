@@ -11,9 +11,9 @@ import (
 	"github.com/scrumno/scrumno-api/config"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
 	staffrole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
-	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
     tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	userProfileEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	config.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 
 	if err := config.Migrate(
-		&user.User{},
+		&userProfileEntity.User{},
 		&staffrole.StaffRole{},
 		&codes.AuthorizeCode{},
 		&tokens.AuthorizeToken{},

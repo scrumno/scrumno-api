@@ -12,6 +12,10 @@ type Config struct {
 
 type JWTConfig struct {
 	SecretKey []byte
+	AccessTokenTtl time.Duration
+	RefreshTokenTtl time.Duration
+	AccessSecret string
+	RefreshSecret string
 }
 
 type SmsConfig struct {
@@ -28,9 +32,6 @@ type IikoConfig struct {
 }
 
 func Load() *Config {
-	secret := utils.GetEnv("JWT_SECRET", "default-dev-secret-change-in-production")
-	secretKey := []byte(secret)
-
 	return &Config{
 		Server: ServerConfig{
 			Port: utils.GetEnv("SERVER_PORT", "8080"),
@@ -44,7 +45,11 @@ func Load() *Config {
 			SSLMode:      utils.GetEnv("DATABASE_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
-			SecretKey: secretKey,
+			SecretKey: utils.GetEnv("JWT_SECRET", ""),
+			AccessSecret:    utils.GetEnv("JWT_ACCESS_SECRET", ""),
+			RefreshSecret:   utils.GetEnv("JWT_REFRESH_SECRET", ""),
+			AccessTokenTtl:  utils.GetEnv("JWT_ACCESS_TOKEN_TTL", "900"),
+			RefreshTokenTtl: utils.GetEnv("JWT_REFRESH_TOKEN_TTL", "604800"),
 		},
 		Sms: SmsConfig{
 			ApiKey: utils.GetEnv("SMS_API_KEY", ""),
