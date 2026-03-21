@@ -15,5 +15,10 @@ func NewService(accessRepo *access.AccessRepository) *Service {
 }
 
 func (s *Service) GetAccessToken(ctx context.Context, apiLogin, apiPassword string) (string, error) {
-	return s.access.PostAccessToken(ctx, apiLogin, apiPassword)
+	token, err := s.access.PostAccessToken(ctx, apiLogin, apiPassword)
+	if err != nil {
+		return "", err
+	}
+
+	return token.Token, nil
 }

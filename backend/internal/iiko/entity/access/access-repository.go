@@ -35,41 +35,46 @@ type accessTokenResponse struct {
 	Token string `json:"token"`
 }
 
-func (r *AccessRepository) PostAccessToken(ctx context.Context, apiLogin, apiPassword string) (string, error) {
+func (r *AccessRepository) PostAccessToken(ctx context.Context, apiLogin, apiPassword string) (*AccessToken, error) {
+	if strings.TrimSpace(apiLogin) == "" {
+		return nil, fmt.Errorf("логин iiko (apiLogin) не задан")
+	}
+
 	u := r.baseURL + "/api/1/access_token"
 	body, err := json.Marshal(accessTokenRequest{
 		APILogin:    apiLogin,
 		APIPassword: apiPassword,
 	})
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("не удалось сформировать тело запроса access_token: %w", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, bytes.NewReader(body))
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("не удалось создать запрос access_token: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("ошибка запроса access_token: %w", err)
 	}
 	defer resp.Body.Close()
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("не удалось прочитать ответ access_token: %w", err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("iiko access_token: status %d: %s", resp.StatusCode, strings.TrimSpace(string(raw)))
+		return nil, fmt.Errorf("iiko access_token: статус %d: %s", resp.StatusCode, strings.TrimSpace(string(raw)))
 	}
 
 	var out accessTokenResponse
 	if err := json.Unmarshal(raw, &out); err != nil {
-		return "", fmt.Errorf("decode access_token response: %w", err)
+		return nil, fmt.Errorf("не удалось декодировать ответ access_token: %w", err)
 	}
 	if out.Token == "" {
-		return "", fmt.Errorf("iiko access_token: empty token in response")
+		return nil, fmt.Errorf("iiko access_token: пустой token в ответе")
 	}
-	return out.Token, nil
+
+	return &AccessToken{Token: out.Token}, nil
 }
