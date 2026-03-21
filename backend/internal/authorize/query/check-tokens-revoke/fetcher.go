@@ -1,17 +1,17 @@
-package get_refresh
+package check_tokens_revoke
 
 import (
 	"context"
 	"errors"
 
-	tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 )
 
 type Fetcher struct {
-	tokenRepo  tokens.TokensRepository
+	tokenRepo authorizeTokens.TokensRepository
 }
 
-func NewFetcher(tokenRepo tokens.TokensRepository) *Fetcher {
+func NewFetcher(tokenRepo authorizeTokens.TokensRepository) *Fetcher {
 	return &Fetcher{
 		tokenRepo: tokenRepo,
 	}
@@ -19,7 +19,7 @@ func NewFetcher(tokenRepo tokens.TokensRepository) *Fetcher {
 
 func (h *Fetcher) Fetch(ctx context.Context, accessToken string) (bool, error) {
 
-	active, err := h.tokenRepo.IsSessionActive(ctx, accessToken);
+	active, err := h.tokenRepo.IsSessionActive(ctx, accessToken)
 	if err != nil {
 		return false, err
 	}

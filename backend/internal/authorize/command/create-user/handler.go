@@ -2,7 +2,7 @@ package create_user
 
 import (
 	"context"
-	
+
 	user "github.com/scrumno/scrumno-api/internal/authorize/entity"
 )
 

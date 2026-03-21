@@ -32,4 +32,3 @@ func DecodeJSONBody(r *http.Request, dst interface{}) error {
 
 	return nil
 }
-

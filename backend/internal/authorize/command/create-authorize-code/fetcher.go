@@ -4,32 +4,32 @@ import (
 	"context"
 	"fmt"
 
-	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
+	authorizeCodes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 )
 
 type Handler struct {
-	codesRepo codes.SmsCodesRepository
+	codesRepo           authorizeCodes.SmsCodesRepository
 	createUniqueCodeSvc *createUniqueCode.CreateUniqueCodeService
 }
 
 func NewHandler(
-	codesRepo codes.SmsCodesRepository,
+	codesRepo authorizeCodes.SmsCodesRepository,
 	createUniqueCodeSvc *createUniqueCode.CreateUniqueCodeService,
 ) *Handler {
 	return &Handler{
-		codesRepo: codesRepo,
+		codesRepo:           codesRepo,
 		createUniqueCodeSvc: createUniqueCodeSvc,
 	}
 }
 
-func (h *Handler) Handle(ctx context.Context, phone string, codeType codes.CodesType) (*codes.AuthorizeCode, error) {
+func (h *Handler) Handle(ctx context.Context, phone string, codeType authorizeCodes.CodesType) (*authorizeCodes.AuthorizeCode, error) {
 	uniqueCode, err := h.createUniqueCodeSvc.CreateUniqueCode(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	authorizeCode := codes.NewAuthorizeCode(phone, uniqueCode, codeType)
+	authorizeCode := authorizeCodes.NewAuthorizeCode(phone, uniqueCode, codeType)
 	fmt.Printf("authorizeCode: %+v\n", authorizeCode)
 	if err = h.codesRepo.Create(ctx, authorizeCode); err != nil {
 		return nil, err

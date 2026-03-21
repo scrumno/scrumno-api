@@ -5,25 +5,25 @@ import (
 	"reflect"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
-	getRefreshTokensFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/get-refresh-tokens-available"
-	findUserByPhoneFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
-	createAuthorizeTokensHandler "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
+	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
+	findUserByPhone "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
+	getRefreshTokensAvailable "github.com/scrumno/scrumno-api/internal/authorize/query/get-refresh-tokens-available"
 )
 
 type RefreshTokensAction struct {
-	GetRefreshTokensFetcher *getRefreshTokensFetcher.Fetcher
-	FindUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher
-	CreateAuthorizeTokensHandler *createAuthorizeTokensHandler.Handler
+	GetRefreshTokensFetcher      *getRefreshTokensAvailable.Fetcher
+	FindUserByPhoneFetcher       *findUserByPhone.Fetcher
+	CreateAuthorizeTokensHandler *createAuthorizeTokens.Handler
 }
 
 func NewRefreshTokensAction(
-	getRefreshTokensFetcher *getRefreshTokensFetcher.Fetcher, 
-	findUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher, 
-	createAuthorizeTokensHandler *createAuthorizeTokensHandler.Handler,
+	getRefreshTokensFetcher *getRefreshTokensAvailable.Fetcher,
+	findUserByPhoneFetcher *findUserByPhone.Fetcher,
+	createAuthorizeTokensHandler *createAuthorizeTokens.Handler,
 ) *RefreshTokensAction {
 	return &RefreshTokensAction{
-		GetRefreshTokensFetcher: getRefreshTokensFetcher,
-		FindUserByPhoneFetcher: findUserByPhoneFetcher,
+		GetRefreshTokensFetcher:      getRefreshTokensFetcher,
+		FindUserByPhoneFetcher:       findUserByPhoneFetcher,
 		CreateAuthorizeTokensHandler: createAuthorizeTokensHandler,
 	}
 }
@@ -42,16 +42,16 @@ func (a *RefreshTokensAction) Action(w http.ResponseWriter, r *http.Request) {
 	err := utils.DecodeJSONBody(r, &req)
 	if err != nil {
 		utils.JSONResponse(w, RefreshTokensErrorResponse{
-			IsSuccess: false, 
-			Error: "Неверный формат запроса",
+			IsSuccess: false,
+			Error:     "Неверный формат запроса",
 		}, http.StatusBadRequest)
 		return
 	}
-	
+
 	if req.RefreshToken == "" {
 		utils.JSONResponse(w, RefreshTokensErrorResponse{
-			IsSuccess: false, 
-			Error: "Рефреш токен не может быть пустым",
+			IsSuccess: false,
+			Error:     "Рефреш токен не может быть пустым",
 		}, http.StatusBadRequest)
 		return
 	}
@@ -60,7 +60,7 @@ func (a *RefreshTokensAction) Action(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.JSONResponse(w, RefreshTokensErrorResponse{
 			IsSuccess: false,
-			Error: err.Error(),
+			Error:     err.Error(),
 		}, http.StatusUnauthorized)
 		return
 	}
@@ -69,7 +69,7 @@ func (a *RefreshTokensAction) Action(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.JSONResponse(w, RefreshTokensErrorResponse{
 			IsSuccess: false,
-			Error: err.Error(),
+			Error:     err.Error(),
 		}, http.StatusUnauthorized)
 		return
 	}
@@ -81,16 +81,16 @@ func (a *RefreshTokensAction) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, expiresIn, err := a.CreateAuthorizeTokensHandler.Handle(r.Context(), createAuthorizeTokensHandler.Command{
-		Phone: user.Phone,
-		UserID: user.ID,
-		SessionID: claims.SessionID,
+	accessToken, refreshToken, expiresIn, err := a.CreateAuthorizeTokensHandler.Handle(r.Context(), createAuthorizeTokens.Command{
+		Phone:               user.Phone,
+		UserID:              user.ID,
+		SessionID:           claims.SessionID,
 		RevokePreviousToken: true,
 	})
 	if err != nil {
 		utils.JSONResponse(w, RefreshTokensErrorResponse{
 			IsSuccess: false,
-			Error: err.Error(),
+			Error:     err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
@@ -105,9 +105,9 @@ func (a *RefreshTokensAction) Action(w http.ResponseWriter, r *http.Request) {
 
 type RefreshTokensResponse struct {
 	IsSuccess    bool   `json:"isSuccess"`
-    AccessToken  string `json:"accessToken"`
-    RefreshToken string `json:"refreshToken"`
-    ExpiresIn    int64  `json:"expiresIn"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"`
 }
 
 type RefreshTokensErrorResponse struct {

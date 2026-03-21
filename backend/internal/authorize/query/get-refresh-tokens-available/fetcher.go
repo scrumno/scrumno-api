@@ -2,18 +2,19 @@ package get_refresh_tokens_available
 
 import (
 	"context"
+
+	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	"github.com/scrumno/scrumno-api/shared/jwt"
-	tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 )
 
 type Fetcher struct {
-	tokenRepo  tokens.TokensRepository
+	tokenRepo  authorizeTokens.TokensRepository
 	jwtManager *jwt.Manager
 }
 
-func NewFetcher(tokenRepo tokens.TokensRepository, jwtManager *jwt.Manager) *Fetcher {
+func NewFetcher(tokenRepo authorizeTokens.TokensRepository, jwtManager *jwt.Manager) *Fetcher {
 	return &Fetcher{
-		tokenRepo: tokenRepo,
+		tokenRepo:  tokenRepo,
 		jwtManager: jwtManager,
 	}
 }

@@ -5,36 +5,36 @@ import (
 	"reflect"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
+	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
+	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
+	createUser "github.com/scrumno/scrumno-api/internal/authorize/command/create-user"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
-	findUserByPhoneFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
-	checkOnetimeCodeHandler "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
-	createUserHandler "github.com/scrumno/scrumno-api/internal/authorize/command/create-user"
-	createAuthorizeTokensHandler "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
+	findUserByPhone "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
 )
 
 type RegistrationAction struct {
-	FindUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher
-	CheckOnetimeCodeHandler *checkOnetimeCodeHandler.Handler
-	CreateUserHandler *createUserHandler.Handler
-	CreateAuthorizeTokensHandler *createAuthorizeTokensHandler.Handler
+	FindUserByPhoneFetcher       *findUserByPhone.Fetcher
+	CheckOntimeCodeHandler       *checkOntimeCode.Handler
+	CreateUserHandler            *createUser.Handler
+	CreateAuthorizeTokensHandler *createAuthorizeTokens.Handler
 }
 
 func NewRegistrationAction(
-	findUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher, 
-	checkOnetimeCodeHandler *checkOnetimeCodeHandler.Handler,
-	createUserHandler *createUserHandler.Handler,
-	createAuthorizeTokensHandler *createAuthorizeTokensHandler.Handler,
+	findUserByPhoneFetcher *findUserByPhone.Fetcher,
+	checkOntimeCodeHandler *checkOntimeCode.Handler,
+	createUserHandler *createUser.Handler,
+	createAuthorizeTokensHandler *createAuthorizeTokens.Handler,
 ) *RegistrationAction {
 	return &RegistrationAction{
-		FindUserByPhoneFetcher: findUserByPhoneFetcher,
-		CheckOnetimeCodeHandler: checkOnetimeCodeHandler,
-		CreateUserHandler: createUserHandler,
+		FindUserByPhoneFetcher:       findUserByPhoneFetcher,
+		CheckOntimeCodeHandler:       checkOntimeCodeHandler,
+		CreateUserHandler:            createUserHandler,
 		CreateAuthorizeTokensHandler: createAuthorizeTokensHandler,
 	}
 }
 
 func (a *RegistrationAction) GetInputType() reflect.Type {
-    return reflect.TypeOf(RegistrationRequest{})
+	return reflect.TypeOf(RegistrationRequest{})
 }
 
 type RegistrationRequest struct {
@@ -47,8 +47,8 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 	var req RegistrationRequest
 	if err := utils.DecodeJSONBody(r, &req); err != nil {
 		utils.JSONResponse(w, RegistrationErrorResponse{
-			IsSuccess: false, 
-			Error: err.Error(),
+			IsSuccess: false,
+			Error:     err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
@@ -69,13 +69,13 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmd := checkOnetimeCodeHandler.Command{
-		Phone: req.Phone,
-		Code:  req.Code,
+	cmd := checkOntimeCode.Command{
+		Phone:    req.Phone,
+		Code:     req.Code,
 		CodeType: codes.RegisterType,
 	}
 
-	err = a.CheckOnetimeCodeHandler.Handle(r.Context(), cmd)
+	err = a.CheckOntimeCodeHandler.Handle(r.Context(), cmd)
 	if err != nil {
 		utils.JSONResponse(w, RegistrationErrorResponse{
 			IsSuccess: false,
@@ -86,7 +86,7 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 
 	createdUser, err := a.CreateUserHandler.Handle(
 		r.Context(),
-		createUserHandler.Command{
+		createUser.Command{
 			Phone: req.Phone,
 		},
 	)
@@ -100,10 +100,10 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 
 	accessToken, refreshToken, expiresIn, err := a.CreateAuthorizeTokensHandler.Handle(
 		r.Context(),
-		createAuthorizeTokensHandler.Command{
-			Phone:  createdUser.Phone,
-			UserID: createdUser.ID,
-			SessionID: "",
+		createAuthorizeTokens.Command{
+			Phone:               createdUser.Phone,
+			UserID:              createdUser.ID,
+			SessionID:           "",
 			RevokePreviousToken: false,
 		},
 	)
@@ -111,7 +111,7 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 		utils.JSONResponse(w, RegistrationErrorResponse{
 			IsSuccess: false,
 			Error:     err.Error(),
-		}, http.StatusBadRequest)	
+		}, http.StatusBadRequest)
 		return
 	}
 

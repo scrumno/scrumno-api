@@ -1,13 +1,16 @@
 package config
 
-import "github.com/scrumno/scrumno-api/shared/utils"
+import (
+	iikoconfig "github.com/scrumno/scrumno-api/internal/iiko/config"
+	"github.com/scrumno/scrumno-api/shared/utils"
+)
 
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Sms      SmsConfig
-	Iiko     IikoConfig
+	Iiko     iikoconfig.Config
 }
 
 type JWTConfig struct {
@@ -15,16 +18,8 @@ type JWTConfig struct {
 }
 
 type SmsConfig struct {
-	ApiKey string
+	ApiKey         string
 	ApiPhoneNumber string
-}
-
-type IikoConfig struct {
-	BaseURL        string
-	Login          string
-	Password       string
-	OrganizationID string
-	TerminalID     string
 }
 
 func Load() *Config {
@@ -47,15 +42,9 @@ func Load() *Config {
 			SecretKey: secretKey,
 		},
 		Sms: SmsConfig{
-			ApiKey: utils.GetEnv("SMS_API_KEY", ""),
+			ApiKey:         utils.GetEnv("SMS_API_KEY", ""),
 			ApiPhoneNumber: utils.GetEnv("SMS_API_PHONE_NUMBER", ""),
 		},
-		Iiko: IikoConfig{
-			BaseURL:        utils.GetEnv("IIKO_BASE_URL", "https://990-418-833.iiko.it/resto/"),
-			Login:          utils.GetEnv("IIKO_LOGIN", ""),
-			Password:       utils.GetEnv("IIKO_PASSWORD", ""),
-			OrganizationID: utils.GetEnv("IIKO_ORGANIZATION_ID", ""),
-			TerminalID:     utils.GetEnv("IIKO_TERMINAL_ID", ""),
-		},
+		Iiko: iikoconfig.Load(),
 	}
 }

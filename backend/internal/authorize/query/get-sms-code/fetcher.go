@@ -3,7 +3,7 @@ package get_sms_code
 import (
 	"context"
 	"errors"
-	
+
 	"github.com/scrumno/scrumno-api/shared/sms"
 )
 
