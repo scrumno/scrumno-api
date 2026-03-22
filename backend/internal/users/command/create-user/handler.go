@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
-	"github.com/scrumno/scrumno-api/shared/base"
+	"github.com/scrumno/scrumno-api/shared/interfaces/base"
 )
 
 type CreateUserHandler struct {

@@ -1,7 +1,6 @@
 package config
 
 import (
-	iikoconfig "github.com/scrumno/scrumno-api/internal/iiko/config"
 	"github.com/scrumno/scrumno-api/shared/utils"
 )
 
@@ -10,7 +9,6 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Sms      SmsConfig
-	Iiko     iikoconfig.Config
 }
 
 type JWTConfig struct {
@@ -45,6 +43,5 @@ func Load() *Config {
 			ApiKey:         utils.GetEnv("SMS_API_KEY", ""),
 			ApiPhoneNumber: utils.GetEnv("SMS_API_PHONE_NUMBER", ""),
 		},
-		Iiko: iikoconfig.Load(),
 	}
 }

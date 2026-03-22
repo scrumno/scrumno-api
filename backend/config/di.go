@@ -22,10 +22,9 @@ import (
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
-	"github.com/scrumno/scrumno-api/internal/iiko"
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
-	"github.com/scrumno/scrumno-api/shared/factory"
+	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
 	"github.com/scrumno/scrumno-api/shared/jwt"
 	"github.com/scrumno/scrumno-api/shared/sms"
 )
@@ -72,8 +71,6 @@ func DI() *action.Actions {
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
-	iikoContainer := iiko.NewContainer(&cfg.Iiko)
-
 	return &action.Actions{
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
@@ -88,7 +85,5 @@ func DI() *action.Actions {
 
 		JWTManager: jwtManager,
 		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
-
-		SetAccess: iikoContainer.SetAccess,
 	}
 }

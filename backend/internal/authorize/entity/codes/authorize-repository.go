@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/scrumno/scrumno-api/shared/base"
-	"github.com/scrumno/scrumno-api/shared/factory"
+	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
+	"github.com/scrumno/scrumno-api/shared/interfaces/base"
 	"gorm.io/gorm"
 )
 
