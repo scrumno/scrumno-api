@@ -2,8 +2,10 @@ package config
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
+	iikoConfig "github.com/scrumno/scrumno-api/infra/integration-system/iiko/config"
 	iikoService "github.com/scrumno/scrumno-api/infra/integration-system/iiko/order/service"
 	"github.com/scrumno/scrumno-api/infra/integration-system/shared"
 	"github.com/scrumno/scrumno-api/infra/integration-system/shared/interfaces"
@@ -27,6 +29,7 @@ import (
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
+	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
 	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
@@ -37,17 +40,28 @@ import (
 func DI() *action.Actions {
 	cfg := Load()
 
+	httpClient := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	/* INTEGRATION SYSTEMs */
 
 	var (
 		// service
 		orderProvider interfaces.OrderProvider
 		orderBuilder  interfaces.OrderBuilder
+
+		// config
+		iikoConfig = iikoConfig.Load()
 	)
 
 	switch cfg.IntegrationSystem.Provider {
 	case shared.ProviderIiko:
-		orderProvider = iikoService.NewOrderProvider()
+		orderProvider = iikoService.NewOrderProvider(
+			&httpClient,
+			iikoConfig,
+		)
+
 		orderBuilder = iikoService.NewOrderBuilder()
 		break
 	default:
@@ -89,6 +103,7 @@ func DI() *action.Actions {
 	createAuthorizeTokensHandler := createAuthorizeTokens.NewHandler(tokensRepo, jwtManager)
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
+	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
@@ -111,6 +126,6 @@ func DI() *action.Actions {
 		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
 
 		// orders
-		CreateOrder: orders.NewCreateOrderAction(orderProvider, orderBuilder),
+		CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
 	}
 }

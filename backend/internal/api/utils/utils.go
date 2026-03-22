@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 )
@@ -28,6 +29,25 @@ func DecodeJSONBody(r *http.Request, dst interface{}) error {
 
 	if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func CheckRequiredFieldsInBody(body io.ReadCloser, requiredFields []string) error {
+	if body == nil {
+		return errors.New("body is empty")
+	}
+
+	var bodyMap map[string]interface{}
+	if err := json.NewDecoder(body).Decode(&bodyMap); err != nil {
+		return errors.New("invalid body")
+	}
+
+	for _, field := range requiredFields {
+		if _, ok := bodyMap[field]; !ok {
+			return errors.New("field " + field + " is required")
+		}
 	}
 
 	return nil
