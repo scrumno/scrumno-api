@@ -3,8 +3,9 @@ package action
 import (
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
-	"github.com/scrumno/scrumno-api/shared/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
 
 type Actions struct {
@@ -13,6 +14,9 @@ type Actions struct {
 
 	// users
 	CreateUser *userAction.CreateUserAction
+
+	// orders
+	CreateOrder *orders.CreateOrderAction
 
 	// auth
 	Registration  *auth.RegistrationAction

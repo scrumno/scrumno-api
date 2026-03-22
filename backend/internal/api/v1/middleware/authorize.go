@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
-	"github.com/scrumno/scrumno-api/shared/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
 
 type contextKey string

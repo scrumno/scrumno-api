@@ -1,11 +1,16 @@
 package config
 
 import (
+	"errors"
 	"time"
 
+	iikoService "github.com/scrumno/scrumno-api/infra/integration-system/iiko/order/service"
+	"github.com/scrumno/scrumno-api/infra/integration-system/shared"
+	"github.com/scrumno/scrumno-api/infra/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
@@ -25,12 +30,31 @@ import (
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
 	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
-	"github.com/scrumno/scrumno-api/shared/jwt"
-	"github.com/scrumno/scrumno-api/shared/sms"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/sms"
 )
 
 func DI() *action.Actions {
 	cfg := Load()
+
+	/* INTEGRATION SYSTEMs */
+
+	var (
+		// service
+		orderProvider interfaces.OrderProvider
+		orderBuilder  interfaces.OrderBuilder
+	)
+
+	switch cfg.IntegrationSystem.Provider {
+	case shared.ProviderIiko:
+		orderProvider = iikoService.NewOrderProvider()
+		orderBuilder = iikoService.NewOrderBuilder()
+		break
+	default:
+		panic(errors.New("integration system provider not found"))
+	}
+
+	/* INTEGRATION SYSTEMs END */
 
 	smsService := sms.NewSmsService(sms.Config{
 		ApiKey:         cfg.Sms.ApiKey,
@@ -85,5 +109,8 @@ func DI() *action.Actions {
 
 		JWTManager: jwtManager,
 		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
+
+		// orders
+		CreateOrder: orders.NewCreateOrderAction(orderProvider, orderBuilder),
 	}
 }
