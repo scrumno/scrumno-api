@@ -46,7 +46,7 @@ func (r *tokensGormRepository) FindTokenPairBySessionId(ctx context.Context, ses
 
 func (r *tokensGormRepository) RevokeTokensByUserSessionId(ctx context.Context, userID uuid.UUID) error {
 	var ac AuthorizeToken
-	
+
 	err := r.DB.WithContext(ctx).
 		Model(&ac).
 		Where("user_id = ?", userID).
@@ -62,7 +62,7 @@ func (r *tokensGormRepository) RevokeTokensByUserSessionId(ctx context.Context, 
 
 func (r *tokensGormRepository) RevokeTokenBySessionId(ctx context.Context, sessionID string) error {
 	var ac AuthorizeToken
-	
+
 	err := r.DB.WithContext(ctx).
 		Model(&ac).
 		Where("id = ?", sessionID).

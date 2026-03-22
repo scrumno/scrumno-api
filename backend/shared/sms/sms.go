@@ -1,8 +1,8 @@
 package sms
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -26,12 +26,12 @@ type Config struct {
 
 func NewSmsService(cfg Config) *SmsService {
 	return &SmsService{
-		ApiKey: cfg.ApiKey,
+		ApiKey:         cfg.ApiKey,
 		ApiPhoneNumber: cfg.ApiPhoneNumber,
 	}
 }
 
-func (s *SmsService) SendSmsMessage(ctx context.Context, phone string, message string) (error) {
+func (s *SmsService) SendSmsMessage(ctx context.Context, phone string, message string) error {
 	requestData := SMSRequest{
 		Number:      s.ApiPhoneNumber, // заменяем на наш купленный номер
 		Destination: phone,

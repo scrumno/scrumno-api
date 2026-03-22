@@ -10,8 +10,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
-	staffrole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
+	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
+	"github.com/scrumno/scrumno-api/internal/users/entity/user"
     tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	userProfileEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
 )
@@ -36,10 +38,10 @@ func main() {
 	config.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 
 	if err := config.Migrate(
-		&userProfileEntity.User{},
-		&staffrole.StaffRole{},
+		&user.User{},
+		&staffRole.StaffRole{},
 		&codes.AuthorizeCode{},
-		&tokens.AuthorizeToken{},
+		&authorizeTokens.AuthorizeToken{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)
@@ -52,7 +54,7 @@ func main() {
 		}
 	}()
 
-	actions := config.DI(cfg)
+	actions := config.DI()
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port

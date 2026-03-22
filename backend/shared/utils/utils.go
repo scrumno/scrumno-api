@@ -24,3 +24,12 @@ func GetEnv(key, fallback string) string {
 
 	return fallback
 }
+
+func TruncateForError(b []byte) string {
+	const max = 512
+	s := string(b)
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "…"
+}

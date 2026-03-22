@@ -15,25 +15,25 @@ type contextKey string
 const ContextKeyClaims contextKey = "jwt_claims"
 
 var (
-	ErrAuthorizationHeaderRequired = errors.New("Обязателен заголовок Authorization")
+	ErrAuthorizationHeaderRequired      = errors.New("Обязателен заголовок Authorization")
 	ErrInvalidAuthorizationHeaderFormat = errors.New("Неверный формат заголовка Authorization")
-	ErrTokenRequired = errors.New("Обязателен токен")
+	ErrTokenRequired                    = errors.New("Обязателен токен")
 )
 
 type AuthMiddleware struct {
-	jwtManager    *jwt.Manager
+	jwtManager *jwt.Manager
 }
 
 func NewAuthMiddleware(jwtManager *jwt.Manager) *AuthMiddleware {
 	return &AuthMiddleware{
-		jwtManager:     jwtManager,
+		jwtManager: jwtManager,
 	}
 }
 
 func (m *AuthMiddleware) Authenticator(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			auth := r.Header.Get("Authorization")
+		auth := r.Header.Get("Authorization")
 
 			token, err := validateHeaderParam(auth)
 			if err != nil {
@@ -55,8 +55,8 @@ func (m *AuthMiddleware) Authenticator(next http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ContextKeyClaims, claims)
-			next.ServeHTTP(w, r.WithContext(ctx))
+		ctx := context.WithValue(r.Context(), ContextKeyClaims, claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -88,7 +88,6 @@ func claimsFromContext(ctx context.Context) *jwt.Claims {
 	c, _ := v.(*jwt.Claims)
 	return c
 }
-
 
 type ErrorResponse struct {
 	IsSuccess bool   `json:"isSuccess"`

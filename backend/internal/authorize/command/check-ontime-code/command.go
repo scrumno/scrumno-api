@@ -1,9 +1,9 @@
 package check_ontime_code
 
-import "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
+import entity "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 
 type Command struct {
-	Phone string
-	Code  string
+	Phone    string
+	Code     string
 	CodeType entity.CodesType
 }

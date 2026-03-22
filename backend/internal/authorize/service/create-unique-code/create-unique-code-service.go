@@ -1,4 +1,4 @@
-package service_code_generator
+package create_unique_code
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"math/big"
 )
 
-type CreateUniqueCodeService struct {}
+type CreateUniqueCodeService struct{}
 
 func NewCreateUniqueCodeService() *CreateUniqueCodeService {
 	return &CreateUniqueCodeService{}
