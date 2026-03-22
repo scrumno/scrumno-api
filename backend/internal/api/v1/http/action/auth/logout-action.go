@@ -6,26 +6,26 @@ import (
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
 	"github.com/scrumno/scrumno-api/internal/authorize/command/logout"
-	findUserByPhoneFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
+	findUserByPhone "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
 )
 
 type LogoutAction struct {
-	Handler *logout.Handler
-	FindUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher
+	Handler                *logout.Handler
+	FindUserByPhoneFetcher *findUserByPhone.Fetcher
 }
 
 func NewLogoutAction(
-	handler *logout.Handler, 
-	findUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher,
+	handler *logout.Handler,
+	findUserByPhoneFetcher *findUserByPhone.Fetcher,
 ) *LogoutAction {
 	return &LogoutAction{
-		Handler: handler,
+		Handler:                handler,
 		FindUserByPhoneFetcher: findUserByPhoneFetcher,
 	}
 }
 
 func (a *LogoutAction) GetInputType() reflect.Type {
-    return reflect.TypeOf(LogoutRequest{})
+	return reflect.TypeOf(LogoutRequest{})
 }
 
 type LogoutRequest struct {
@@ -38,8 +38,8 @@ func (a *LogoutAction) Action(w http.ResponseWriter, r *http.Request) {
 	err := utils.DecodeJSONBody(r, &req)
 	if err != nil {
 		utils.JSONResponse(w, LogoutErrorResponse{
-			IsSuccess: false, 
-			Error: err.Error(),
+			IsSuccess: false,
+			Error:     err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
@@ -72,7 +72,7 @@ func (a *LogoutAction) Action(w http.ResponseWriter, r *http.Request) {
 }
 
 type LogoutResponse struct {
-    IsSuccess    bool   `json:"isSuccess"`
+	IsSuccess bool `json:"isSuccess"`
 }
 
 type LogoutErrorResponse struct {

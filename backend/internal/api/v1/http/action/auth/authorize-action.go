@@ -5,32 +5,32 @@ import (
 	"reflect"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
+	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
+	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
-	findUserByPhoneFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
-	checkOnetimeCodeHandler "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
-	createAuthorizeTokensHandler "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
+	findUserByPhone "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
 )
 
 type AuthorizeAction struct {
-	FindUserByPhoneFetcher       *findUserByPhoneFetcher.Fetcher
-	CheckOnetimeCodeHandler     *checkOnetimeCodeHandler.Handler
-	CreateAuthorizeTokensHandler *createAuthorizeTokensHandler.Handler
+	FindUserByPhoneFetcher       *findUserByPhone.Fetcher
+	CheckOntimeCodeHandler       *checkOntimeCode.Handler
+	CreateAuthorizeTokensHandler *createAuthorizeTokens.Handler
 }
 
 func NewAuthorizeAction(
-	findUserByPhoneFetcher *findUserByPhoneFetcher.Fetcher,
-	checkOnetimeCodeHandler *checkOnetimeCodeHandler.Handler,
-	createAuthorizeTokensHandler *createAuthorizeTokensHandler.Handler,
+	findUserByPhoneFetcher *findUserByPhone.Fetcher,
+	checkOntimeCodeHandler *checkOntimeCode.Handler,
+	createAuthorizeTokensHandler *createAuthorizeTokens.Handler,
 ) *AuthorizeAction {
 	return &AuthorizeAction{
-		FindUserByPhoneFetcher: findUserByPhoneFetcher,
-		CheckOnetimeCodeHandler: checkOnetimeCodeHandler,
+		FindUserByPhoneFetcher:       findUserByPhoneFetcher,
+		CheckOntimeCodeHandler:       checkOntimeCodeHandler,
 		CreateAuthorizeTokensHandler: createAuthorizeTokensHandler,
 	}
-}	
+}
 
 func (a *AuthorizeAction) GetInputType() reflect.Type {
-    return reflect.TypeOf(AuthorizeRequest{})
+	return reflect.TypeOf(AuthorizeRequest{})
 }
 
 type AuthorizeRequest struct {
@@ -44,8 +44,8 @@ func (a *AuthorizeAction) Action(w http.ResponseWriter, r *http.Request) {
 	err := utils.DecodeJSONBody(r, &req)
 	if err != nil {
 		utils.JSONResponse(w, AuthorizeErrorResponse{
-			IsSuccess: false, 
-			Error: err.Error(),
+			IsSuccess: false,
+			Error:     err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
@@ -66,13 +66,13 @@ func (a *AuthorizeAction) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checkCmd := checkOnetimeCodeHandler.Command{
+	checkCmd := checkOntimeCode.Command{
 		Phone:    req.Phone,
 		Code:     req.Code,
 		CodeType: codes.AuthType,
 	}
 
-	err = a.CheckOnetimeCodeHandler.Handle(r.Context(), checkCmd)
+	err = a.CheckOntimeCodeHandler.Handle(r.Context(), checkCmd)
 	if err != nil {
 		utils.JSONResponse(w, AuthorizeErrorResponse{
 			IsSuccess: false,
@@ -81,10 +81,10 @@ func (a *AuthorizeAction) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokensCmd := createAuthorizeTokensHandler.Command{
-		Phone:  user.Phone,
-		UserID: user.ID,
-		SessionID: "",
+	tokensCmd := createAuthorizeTokens.Command{
+		Phone:               user.Phone,
+		UserID:              user.ID,
+		SessionID:           "",
 		RevokePreviousToken: false,
 	}
 
@@ -106,14 +106,13 @@ func (a *AuthorizeAction) Action(w http.ResponseWriter, r *http.Request) {
 }
 
 type AuthorizeResponse struct {
-    IsSuccess    bool   `json:"isSuccess"`
-    AccessToken  string `json:"accessToken"`
-    RefreshToken string `json:"refreshToken"`
-    ExpiresIn    int64  `json:"expiresIn"`
+	IsSuccess    bool   `json:"isSuccess"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"`
 }
 
 type AuthorizeErrorResponse struct {
 	IsSuccess bool   `json:"isSuccess"`
 	Error     string `json:"error"`
 }
-

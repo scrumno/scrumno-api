@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-    tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 )
 
 type Handler struct {
-	tokenRepo tokens.TokensRepository
+	tokenRepo authorizeTokens.TokensRepository
 }
 
-func NewHandler(tokenRepo tokens.TokensRepository) *Handler {
+func NewHandler(tokenRepo authorizeTokens.TokensRepository) *Handler {
 	return &Handler{
 		tokenRepo: tokenRepo,
 	}

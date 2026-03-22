@@ -10,10 +10,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
-	staffrole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
-	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
-    tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
+	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 )
 
 func main() {
@@ -37,9 +37,9 @@ func main() {
 
 	if err := config.Migrate(
 		&user.User{},
-		&staffrole.StaffRole{},
+		&staffRole.StaffRole{},
 		&codes.AuthorizeCode{},
-		&tokens.AuthorizeToken{},
+		&authorizeTokens.AuthorizeToken{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)
@@ -52,7 +52,7 @@ func main() {
 		}
 	}()
 
-	actions := config.DI(cfg)
+	actions := config.DI()
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port

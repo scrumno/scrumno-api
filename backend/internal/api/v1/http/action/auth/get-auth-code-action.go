@@ -6,27 +6,27 @@ import (
 	"reflect"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
+	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
-	getSmsCodeSendAvailableFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code-send-available"
-	getSmsCodeFetcher "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code"
-	createAuthorizeCodeHandler "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
+	getSmsCode "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code"
+	getSmsCodeSendAvailable "github.com/scrumno/scrumno-api/internal/authorize/query/get-sms-code-send-available"
 )
 
 type AuthCodeAction struct {
-	GetSmsCodeSendAvailableFetcher *getSmsCodeSendAvailableFetcher.Fetcher
-	GetSmsCodeFetcher *getSmsCodeFetcher.Fetcher
-	CreateAuthorizeCodeHandler *createAuthorizeCodeHandler.Handler
+	GetSmsCodeSendAvailableFetcher *getSmsCodeSendAvailable.Fetcher
+	GetSmsCodeFetcher              *getSmsCode.Fetcher
+	CreateAuthorizeCodeHandler     *createAuthorizeCode.Handler
 }
 
 func NewAuthCodeAction(
-	getSmsCodeSendAvailableFetcher *getSmsCodeSendAvailableFetcher.Fetcher,
-	getSmsCodeFetcher *getSmsCodeFetcher.Fetcher,
-	createAuthorizeCodeHandler *createAuthorizeCodeHandler.Handler,
+	getSmsCodeSendAvailableFetcher *getSmsCodeSendAvailable.Fetcher,
+	getSmsCodeFetcher *getSmsCode.Fetcher,
+	createAuthorizeCodeHandler *createAuthorizeCode.Handler,
 ) *AuthCodeAction {
 	return &AuthCodeAction{
 		GetSmsCodeSendAvailableFetcher: getSmsCodeSendAvailableFetcher,
-		GetSmsCodeFetcher: getSmsCodeFetcher,
-		CreateAuthorizeCodeHandler: createAuthorizeCodeHandler,
+		GetSmsCodeFetcher:              getSmsCodeFetcher,
+		CreateAuthorizeCodeHandler:     createAuthorizeCodeHandler,
 	}
 }
 
@@ -35,18 +35,18 @@ func (a *AuthCodeAction) GetInputType() reflect.Type {
 }
 
 type GetAuthCodeRequest struct {
-	Phone string `json:"phone" example:"79090000000"`
+	Phone    string          `json:"phone" example:"79090000000"`
 	CodeType codes.CodesType `json:"codeType" example:"authorize"`
 }
 
 func (a *AuthCodeAction) Action(w http.ResponseWriter, r *http.Request) {
-	
+
 	var req GetAuthCodeRequest
 	err := utils.DecodeJSONBody(r, &req)
 	if err != nil {
 		utils.JSONResponse(w, AuthCodeErrorResponse{
-			IsSuccess: false, 
-			Error: "Неверный формат запроса",
+			IsSuccess: false,
+			Error:     "Неверный формат запроса",
 		}, http.StatusBadRequest)
 		return
 	}
@@ -77,14 +77,14 @@ func (a *AuthCodeAction) Action(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authorizeCode, err := a.CreateAuthorizeCodeHandler.Handle(
-		r.Context(), 
-		req.Phone, 
+		r.Context(),
+		req.Phone,
 		req.CodeType,
 	)
 	if err != nil {
 		utils.JSONResponse(w, AuthCodeErrorResponse{
 			IsSuccess: false,
-			Error: err.Error(),
+			Error:     err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
@@ -95,7 +95,7 @@ func (a *AuthCodeAction) Action(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.JSONResponse(w, AuthCodeErrorResponse{
 			IsSuccess: false,
-			Error: err.Error(),
+			Error:     err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}

@@ -1,11 +1,12 @@
 package v1
 
 import (
-	"github.com/gorilla/mux"
 	"log"
+
+	"github.com/gorilla/mux"
 	"github.com/scrumno/scrumno-api/config"
-	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	"github.com/scrumno/scrumno-api/internal/api/v1/collector"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	"github.com/scrumno/scrumno-api/internal/api/v1/middleware"
 )
 
@@ -29,22 +30,22 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	}
 
 	collectorRoutes.HandleFuncWithPostman(
-        health,
+		health,
 		healthPrefix,
-        actions.CheckStatusConnectDB.Action,
-        actions.CheckStatusConnectDB.GetInputType(),
-        "GET",
-        "/check-status-connect-db",
-    )
+		actions.CheckStatusConnectDB.Action,
+		actions.CheckStatusConnectDB.GetInputType(),
+		"GET",
+		"/check-status-connect-db",
+	)
 
 	collectorRoutes.HandleFuncWithPostman(
-        health,
+		health,
 		healthPrefix,
-        actions.CheckStatusConnectDB.Action,
-        actions.CheckStatusConnectDB.GetInputType(),
-        "POST",
-        "/check-1221",
-    )
+		actions.CheckStatusConnectDB.Action,
+		actions.CheckStatusConnectDB.GetInputType(),
+		"POST",
+		"/check-1221",
+	)
 
 	userPrefix := "/users"
 	user := api.PathPrefix(userPrefix).Subrouter()
@@ -52,15 +53,6 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	if actions.JWTManager != nil {
 		user.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
 	}
-
-	collectorRoutes.HandleFuncWithPostman(
-        user,
-		userPrefix,
-        actions.CreateUser.Action,
-        actions.CreateUser.GetInputType(),
-        "POST",
-        "/{phone}",
-    )
 
 	authPrefix := "/auth"
 
@@ -113,16 +105,8 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 
 	err := collectorRoutes.GeneratePostmanCollections()
 	if err != nil {
-        log.Printf("Ошибка генерации Postman: %v", err)
-    }
-
-	iiko := api.PathPrefix("/iiko").Subrouter()
-	iiko.HandleFunc("/orders/pickup", actions.CreateIikoPickupOrder.Action).Methods("POST")
-	iiko.HandleFunc("/organizations", actions.GetIikoOrganizations.Action).Methods("GET")
-
-	nomenclature := iiko.PathPrefix("/nomenclature").Subrouter()
-	nomenclature.Use(middleware.RequireOrganizationID)
-	nomenclature.HandleFunc("", actions.GetIikoNomenclature.Action).Methods("GET")
+		log.Printf("Ошибка генерации Postman: %v", err)
+	}
 
 	return router
 }

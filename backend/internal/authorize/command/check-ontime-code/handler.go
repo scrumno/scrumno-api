@@ -3,7 +3,7 @@ package check_ontime_code
 import (
 	"context"
 	"errors"
-	
+
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 )
 

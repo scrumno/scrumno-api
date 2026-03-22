@@ -2,8 +2,8 @@ package entity
 
 import (
 	"context"
-	"time"
 	"errors"
+	"time"
 
 	"github.com/scrumno/scrumno-api/shared/base"
 	"github.com/scrumno/scrumno-api/shared/factory"
