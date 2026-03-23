@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/scrumno/scrumno-api/shared/sms"
+	"github.com/scrumno/scrumno-api/shared/services/sms"
 )
 
 type Fetcher struct {

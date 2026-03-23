@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
-	jwt "github.com/scrumno/scrumno-api/shared/jwt"
+	jwt "github.com/scrumno/scrumno-api/shared/services/jwt"
 )
 
 type Handler struct {

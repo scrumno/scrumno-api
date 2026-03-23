@@ -1,12 +1,18 @@
 package config
 
 import (
-	"log/slog"
+	"errors"
+	"net/http"
+	"time"
 
+	iikoConfig "github.com/scrumno/scrumno-api/infra/integration-system/iiko/config"
+	iikoService "github.com/scrumno/scrumno-api/infra/integration-system/iiko/order/service"
+	"github.com/scrumno/scrumno-api/infra/integration-system/shared"
+	"github.com/scrumno/scrumno-api/infra/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
-	iikoAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/iiko"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
@@ -23,15 +29,45 @@ import (
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
-	"github.com/scrumno/scrumno-api/internal/iiko"
+	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
-	"github.com/scrumno/scrumno-api/shared/factory"
-	"github.com/scrumno/scrumno-api/shared/jwt"
-	"github.com/scrumno/scrumno-api/shared/sms"
+	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/sms"
 )
 
 func DI(cfg *Config) *action.Actions {
+
+	httpClient := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	/* INTEGRATION SYSTEMs */
+
+	var (
+		// service
+		orderProvider interfaces.OrderProvider
+		orderBuilder  interfaces.OrderBuilder
+
+		// config
+		iikoConfig = iikoConfig.Load()
+	)
+
+	switch cfg.IntegrationSystem.Provider {
+	case shared.ProviderIiko:
+		orderProvider = iikoService.NewOrderProvider(
+			&httpClient,
+			iikoConfig,
+		)
+
+		orderBuilder = iikoService.NewOrderBuilder()
+		break
+	default:
+		panic(errors.New("integration system provider not found"))
+	}
+
+	/* INTEGRATION SYSTEMs END */
 
 	smsService := sms.NewSmsService(sms.Config{
 		ApiKey:         cfg.Sms.ApiKey,
@@ -65,13 +101,12 @@ func DI(cfg *Config) *action.Actions {
 	createAuthorizeTokensHandler := createAuthorizeTokens.NewHandler(tokensRepo, jwtManager)
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
+	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
-
-	iikoContainer := iiko.NewContainer(&cfg.Iiko)
 
 	return &action.Actions{
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
@@ -88,6 +123,7 @@ func DI(cfg *Config) *action.Actions {
 		JWTManager: jwtManager,
 		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
 
-		SetAccess: iikoContainer.SetAccess,
+		// orders
+		CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
 	}
 }

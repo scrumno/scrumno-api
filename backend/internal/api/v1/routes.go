@@ -112,6 +112,20 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"/update-user-profile",
 	)
 	
+	// INTEGRATION SYSTEMs
+	ordersPrefix := "/orders"
+	orders := api.PathPrefix(ordersPrefix).Subrouter()
+
+	collectorRoutes.HandleFuncWithPostman(
+		orders,
+		ordersPrefix,
+		actions.CreateOrder.Action,
+		actions.CreateOrder.GetInputType(),
+		"POST",
+		"/create-order",
+	)
+	// INTEGRATION SYSTEMs END
+
 	err := collectorRoutes.GeneratePostmanCollections()
 	if err != nil {
 		log.Printf("Ошибка генерации Postman: %v", err)
