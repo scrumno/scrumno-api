@@ -1,14 +1,9 @@
 package config
 
 import (
-	"errors"
-	"net/http"
 	"time"
 
-	iikoConfig "github.com/scrumno/scrumno-api/infra/integration-system/iiko/config"
-	iikoService "github.com/scrumno/scrumno-api/infra/integration-system/iiko/order/service"
-	"github.com/scrumno/scrumno-api/infra/integration-system/shared"
-	"github.com/scrumno/scrumno-api/infra/integration-system/shared/interfaces"
+	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
@@ -39,10 +34,6 @@ import (
 
 func DI(cfg *Config) *action.Actions {
 
-	httpClient := http.Client{
-		Timeout: 10 * time.Second,
-	}
-
 	/* INTEGRATION SYSTEMs */
 
 	var (
@@ -51,21 +42,8 @@ func DI(cfg *Config) *action.Actions {
 		orderBuilder  interfaces.OrderBuilder
 
 		// config
-		iikoConfig = iikoConfig.Load()
+
 	)
-
-	switch cfg.IntegrationSystem.Provider {
-	case shared.ProviderIiko:
-		orderProvider = iikoService.NewOrderProvider(
-			&httpClient,
-			iikoConfig,
-		)
-
-		orderBuilder = iikoService.NewOrderBuilder()
-		break
-	default:
-		panic(errors.New("integration system provider not found"))
-	}
 
 	/* INTEGRATION SYSTEMs END */
 
