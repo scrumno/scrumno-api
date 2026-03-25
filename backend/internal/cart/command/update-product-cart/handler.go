@@ -1,9 +1,7 @@
 package update_product_to_cart
 
 import (
-	"github.com/google/uuid"
 	"context"
-	"errors"
 
 	cartRepo "github.com/scrumno/scrumno-api/internal/cart/entity"
 	except "github.com/scrumno/scrumno-api/shared/exception/cart"
@@ -25,20 +23,20 @@ func (h *Handler) Handler(ctx context.Context, cmd Command) error {
 		return err
 	}
 
-	var productPrice float64; 
+	var productPrice float64
 	found := false
-    
-    for _, product := range cart.Items {
-        if product.ID == cmd.ProductID {
-            productPrice = float64(product.UnitPrice) * float64(cmd.Quantity)
-            found = true
-            break
-        }
-    }
+
+	for _, product := range cart.Items {
+		if product.ID == cmd.ProductID {
+			productPrice = float64(product.UnitPrice) * float64(cmd.Quantity)
+			found = true
+			break
+		}
+	}
 
 	if !found {
-        return nil
-    }
+		return nil
+	}
 
 	isUpdated, err := h.cr.UpdateCartProduct(
 		ctx,

@@ -5,8 +5,8 @@ import (
 )
 
 type Command struct {
-	UserID uuid.UUID
-	ProductID string 
-	Quantity int
+	UserID    uuid.UUID
+	ProductID uuid.UUID
+	Quantity  int
 	BasePrice float64
 }

@@ -6,16 +6,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	except "github.com/scrumno/scrumno-api/shared/exception/cart"
 	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
 	"github.com/scrumno/scrumno-api/shared/interfaces/base"
 	"gorm.io/gorm"
-	except "github.com/scrumno/scrumno-api/shared/exception/cart"
 )
 
 type CartRepository interface {
 	base.BaseRepository[Cart]
-	AddProductToCart(ctx context.Context, userID uuid.UUID, productID string, quantity int, price float64) error
+	AddProductToCart(ctx context.Context, userID uuid.UUID, productID uuid.UUID, quantity int, price float64) error
 	GetCartByUserId(ctx context.Context, userID uuid.UUID) (*Cart, error)
+	UpdateCartProduct(ctx context.Context, productID uuid.UUID, quantity int, price float64, cart *Cart) (bool, error)
 }
 
 type cartGormRepository struct {
@@ -28,14 +29,14 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 	}
 }
 
-func (r *cartGormRepository) AddProductToCart(ctx context.Context, userID uuid.UUID, productID string, quantity int, price float64) error {
-	
+func (r *cartGormRepository) AddProductToCart(ctx context.Context, userID uuid.UUID, productID uuid.UUID, quantity int, price float64) error {
+
 	cart, err := r.GetCartByUserId(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	updated, err := r.UpdateCartProduct(ctx, productID, quantity, price, cart);
+	updated, err := r.UpdateCartProduct(ctx, productID, quantity, price, cart)
 	if err != nil {
 		return err
 	}
@@ -48,19 +49,19 @@ func (r *cartGormRepository) AddProductToCart(ctx context.Context, userID uuid.U
 		ID:        uuid.New(),
 		CartID:    cart.ID,
 		ProductID: productID,
-		Quantity: quantity,
+		Quantity:  quantity,
 		UnitPrice: price,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
 	if err := r.DB.WithContext(ctx).Create(&newProductItem).Error; err != nil {
-		return except.ErrCartAddProduct;
+		return except.ErrCartAddProduct
 	}
 	return nil
 }
 
-func (r *cartGormRepository) UpdateCartProduct(ctx context.Context, productID string, quantity int, price float64, cart *Cart) (bool, error) {
+func (r *cartGormRepository) UpdateCartProduct(ctx context.Context, productID uuid.UUID, quantity int, price float64, cart *Cart) (bool, error) {
 	var existingItem *CartItem
 	for i, item := range cart.Items {
 		if item.ProductID == productID {
@@ -104,4 +105,3 @@ func (r *cartGormRepository) GetCartByUserId(ctx context.Context, userID uuid.UU
 
 	return &cart, nil
 }
-
