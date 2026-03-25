@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
-	"github.com/scrumno/scrumno-api/shared/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
 
 type contextKey string
@@ -35,23 +35,25 @@ func (m *AuthMiddleware) Authenticator(next http.Handler) http.Handler {
 
 		auth := r.Header.Get("Authorization")
 
-		token, err := validateHeaderParam(auth)
-		if err != nil {
-			utils.JSONResponse(w, ErrorResponse{
-				IsSuccess: false,
-				Error:     err.Error(),
-			}, http.StatusUnauthorized)
-			return
-		}
+			token, err := validateHeaderParam(auth)
+			if err != nil {
+				utils.JSONResponse(w, ErrorResponse{
+					IsSuccess: false,
+					StatusCode: http.StatusUnauthorized,
+					Error:     err.Error(),
+				}, http.StatusUnauthorized)
+				return
+			}
 
-		claims, err := m.jwtManager.ValidateAccessToken(token)
-		if err != nil {
-			utils.JSONResponse(w, ErrorResponse{
-				IsSuccess: false,
-				Error:     err.Error(),
-			}, http.StatusUnauthorized)
-			return
-		}
+			claims, err := m.jwtManager.ValidateAccessToken(token)
+			if err != nil {
+				utils.JSONResponse(w, ErrorResponse{
+					IsSuccess: false,
+					StatusCode: http.StatusUnauthorized,
+					Error:     err.Error(),
+				}, http.StatusUnauthorized)
+				return
+			}
 
 		ctx := context.WithValue(r.Context(), ContextKeyClaims, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -89,5 +91,6 @@ func claimsFromContext(ctx context.Context) *jwt.Claims {
 
 type ErrorResponse struct {
 	IsSuccess bool   `json:"isSuccess"`
+	StatusCode int    `json:"statusCode"`
 	Error     string `json:"error"`
 }

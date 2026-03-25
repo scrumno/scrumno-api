@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	themePreset "github.com/scrumno/scrumno-api/internal/app/entity/theme-preset"
-	"github.com/scrumno/scrumno-api/internal/organization/entity/venue"
 )
 
 type AppConfig struct {
@@ -19,6 +18,4 @@ type AppConfig struct {
 	// venues.address по-прежнему используется для геокодинга.
 	AddressManual *string    `gorm:"type:text" json:"address_manual,omitempty"`
 	UpdatedAt     *time.Time `                  json:"updated_at,omitempty"`
-
-	Venue venue.Venue `gorm:"foreignKey:VenueID" json:"venue,omitempty"`
 }

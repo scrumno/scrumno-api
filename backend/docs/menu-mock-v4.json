@@ -1,0 +1,619 @@
+{
+  "meta": {
+    "source": "iiko /api/2/menu/by_id",
+    "formatVersion": 4,
+    "note": "Rich mock for development. Contains full and minimal entities, plus explicit categoryTree with subcategories."
+  },
+  "requestExample": {
+    "externalMenuId": "15#3",
+    "organizationIds": [
+      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f",
+      "3d2b4ef0-746f-4e0b-8f53-a2e30f8de104"
+    ],
+    "priceCategoryId": "00000000-0000-0000-0000-000000000000",
+    "version": 4,
+    "language": "ru-RU"
+  },
+  "externalMenuV4": {
+    "taxCategories": [
+      {
+        "id": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0",
+        "name": "НДС 20%",
+        "percentage": 20
+      },
+      {
+        "id": "80bb195c-5aaf-49e0-b1f8-d0af805f8b2f",
+        "name": "НДС 10%",
+        "percentage": 10
+      }
+    ],
+    "productCategories": [
+      {
+        "id": "de8a2257-5150-4a0e-8721-bcbfd90f9a9b",
+        "name": "Горячие блюда",
+        "isDeleted": false
+      },
+      {
+        "id": "40af9f6f-6c8a-48b2-a4fe-c6ce23d8dcf4",
+        "name": "Напитки",
+        "isDeleted": false
+      },
+      {
+        "id": "4f95af22-5537-4f4f-b6b7-cf7bc88db104",
+        "name": "Соусы и допы",
+        "isDeleted": false
+      }
+    ],
+    "allergenGroups": [
+      {
+        "id": "fdd18111-2cbf-4b0a-8562-f9d579feca95",
+        "code": "GLUTEN",
+        "name": "Глютен",
+        "isDeleted": false
+      },
+      {
+        "id": "81de172f-46d7-44ed-bf89-c8fb4e36abeb",
+        "code": "MILK",
+        "name": "Молоко",
+        "isDeleted": false
+      },
+      {
+        "id": "0972a9a8-0077-438b-81ad-ff6a48a4b6e8",
+        "code": "NUTS",
+        "name": "Орехи",
+        "isDeleted": false
+      }
+    ],
+    "customerTagGroups": [
+      {
+        "id": "f95ce547-eb6a-486f-bcc2-f397f48095f1",
+        "name": "Тип клиента",
+        "selectSeveralTags": false,
+        "items": [
+          {
+            "id": "4d66f4a9-a998-4b9d-86b2-3613f9311963",
+            "name": "Обычный"
+          },
+          {
+            "id": "e7514f75-6a36-43a7-8134-f470d6eff966",
+            "name": "Премиум"
+          }
+        ]
+      }
+    ],
+    "overrideTaxCategories": [
+      {
+        "orderType": "12f8f314-5757-489c-8fd1-8716b7bc7c43",
+        "baseTaxCategory": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0",
+        "newTaxCategory": "80bb195c-5aaf-49e0-b1f8-d0af805f8b2f"
+      }
+    ],
+    "revision": 91203,
+    "formatVersion": 4,
+    "id": 153,
+    "name": "Главное меню доставки",
+    "description": "Тестовое насыщенное меню для разработки.",
+    "buttonImageUrl": "https://cdn.example.com/menu/button-main.png",
+    "intervals": [
+      {
+        "organizationId": "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f",
+        "fromTime": "00:00",
+        "toTime": "23:59"
+      },
+      {
+        "organizationId": "3d2b4ef0-746f-4e0b-8f53-a2e30f8de104",
+        "fromTime": "08:00",
+        "toTime": "22:00"
+      }
+    ],
+    "comboCategories": [
+      {
+        "id": "22d6dc4f-8077-46ec-9850-32f6bd7dadfd",
+        "name": "Комбо-наборы",
+        "combos": [
+          {
+            "name": "Комбо Бургер + Картофель + Напиток",
+            "price": 499,
+            "groups": [
+              {
+                "id": "ef4d9d01-2d7a-425a-8f47-3544048b5b35",
+                "name": "Основа",
+                "isMainGroup": true,
+                "items": [
+                  {
+                    "itemId": "85d4ca90-e886-47f9-8ec5-3d3555039782",
+                    "forbiddenModifiers": [],
+                    "priceModificationAmount": 0
+                  },
+                  {
+                    "itemId": "18203062-f29d-47e8-b623-d53be47ff7ef",
+                    "forbiddenModifiers": [],
+                    "priceModificationAmount": 40
+                  }
+                ],
+                "skipStep": false
+              }
+            ],
+            "image": [
+              {
+                "url": "https://cdn.example.com/combo/burger-set.png",
+                "hash": "sha1:combo-burger-set"
+              }
+            ],
+            "description": "Собери свой набор из бургера, гарнира и напитка.",
+            "sizes": [
+              {
+                "name": "Стандарт",
+                "id": "9aa9a57f-4c3d-4f3d-8012-4abf3695d15c",
+                "shortName": "Std",
+                "buttonImage": {
+                  "url": "https://cdn.example.com/combo/size-std.png",
+                  "hash": "sha1:size-std"
+                }
+              },
+              {
+                "name": "Большой",
+                "id": "d4db42f0-f20d-4822-ac8c-a39f69786584",
+                "shortName": "L",
+                "buttonImage": {
+                  "url": "https://cdn.example.com/combo/size-l.png",
+                  "hash": "sha1:size-l"
+                }
+              }
+            ],
+            "priceStrategy": "FIXED",
+            "startDate": "2026-01-01T00:00:00+03:00",
+            "expirationDate": "2027-01-01T00:00:00+03:00",
+            "id": "27f5a7f9-f18f-469b-a4aa-8ed00985e58d"
+          }
+        ]
+      }
+    ],
+    "itemGroups": [
+      {
+        "id": "cat-pizza",
+        "name": "Пицца",
+        "description": "Пиццы на тонком и традиционном тесте",
+        "buttonImageUrl": "https://cdn.example.com/groups/pizza.png",
+        "iikoGroupId": "5bc11aca-a487-44ea-84e6-ecf4f9b66fca",
+        "scheduleId": "4af7736f-2bbf-4d91-a313-ad0fbf3a85c7",
+        "scheduleName": "Ежедневно",
+        "schedules": [
+          {
+            "begin": "09:00",
+            "end": "23:00",
+            "daysOfWeek": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          }
+        ],
+        "isHidden": false,
+        "labels": ["new", "top"],
+        "tags": ["italian", "main"],
+        "items": [
+          {
+            "sku": "PIZZA-PEPPERONI",
+            "name": "Пепперони премиум",
+            "description": "Острая пепперони, моцарелла, фирменный соус и двойная порция сыра.",
+            "itemSizes": [
+              {
+                "sku": "PIZZA-PEPPERONI-30",
+                "sizeCode": "30CM",
+                "sizeName": "30 см",
+                "isDefault": true,
+                "itemModifierGroups": [
+                  {
+                    "name": "Добавки",
+                    "description": "Дополнительные ингредиенты",
+                    "restrictions": {
+                      "minQuantity": 0,
+                      "maxQuantity": 5,
+                      "freeQuantity": 1,
+                      "hideIfDefaultQuantity": false,
+                      "defaultQuantity": 0
+                    },
+                    "items": [
+                      {
+                        "sku": "MOD-CHEESE",
+                        "name": "Доп. сыр",
+                        "description": "Порция тертого сыра",
+                        "restrictions": [
+                          {
+                            "minQuantity": 0,
+                            "maxQuantity": 2,
+                            "freeQuantity": 0,
+                            "hideIfDefaultQuantity": false,
+                            "defaultQuantity": 0
+                          }
+                        ],
+                        "isHidden": false,
+                        "prices": [
+                          {
+                            "organizations": [
+                              "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f"
+                            ],
+                            "price": 89,
+                            "taxCategoryId": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0"
+                          }
+                        ],
+                        "nutritions": [
+                          {
+                            "fats": 19.4,
+                            "proteins": 23.2,
+                            "carbs": 1.7,
+                            "energy": 260.0,
+                            "organizations": [
+                              "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f"
+                            ],
+                            "saturatedFattyAcid": 10.1,
+                            "salt": 1.2,
+                            "sugar": 0.2
+                          }
+                        ],
+                        "taxCategoryId": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0",
+                        "independentQuantity": false,
+                        "productCategoryId": "4f95af22-5537-4f4f-b6b7-cf7bc88db104",
+                        "customerTagGroups": [],
+                        "paymentSubject": "commodity",
+                        "outerEanCode": "4607000001123",
+                        "isMarked": false,
+                        "measureUnitType": "GRAM",
+                        "paymentSubjectCode": "01",
+                        "barcodes": [
+                          {
+                            "barcode": "2000001000012",
+                            "container": "piece"
+                          }
+                        ],
+                        "buttonImageUrl": "https://cdn.example.com/modifiers/cheese.png",
+                        "allergenGroupIds": ["81de172f-46d7-44ed-bf89-c8fb4e36abeb"],
+                        "labels": ["cheese"],
+                        "tags": ["popular"],
+                        "id": "e21fd6a2-ad6f-4404-88cb-ff6368686cc0",
+                        "weight": 30
+                      }
+                    ],
+                    "isHidden": false,
+                    "childModifiersHaveMinMaxRestrictions": true,
+                    "sku": "GROUP-ADD",
+                    "splittable": false,
+                    "id": "744a4ff1-8a9d-4317-b935-bf66d1c9f634"
+                  }
+                ],
+                "prices": [
+                  {
+                    "organizations": [
+                      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f",
+                      "3d2b4ef0-746f-4e0b-8f53-a2e30f8de104"
+                    ],
+                    "price": 629,
+                    "taxCategoryId": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0"
+                  }
+                ],
+                "nutritions": [
+                  {
+                    "fats": 13.8,
+                    "proteins": 12.3,
+                    "carbs": 25.4,
+                    "energy": 269,
+                    "organizations": [
+                      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f"
+                    ],
+                    "saturatedFattyAcid": 4.2,
+                    "salt": 1.4,
+                    "sugar": 2.6
+                  }
+                ],
+                "isHidden": false,
+                "measureUnitType": "GRAM",
+                "buttonImageUrl": "https://cdn.example.com/sizes/30cm.png",
+                "weight": 490,
+                "id": "5a2ea4f4-08b9-4239-97b6-88c49f5f98b7"
+              }
+            ],
+            "modifierSchemaId": "2d5489f1-285f-4245-a96c-74540d6a9155",
+            "modifierSchemaName": "Пицца базовая",
+            "type": "DISH",
+            "canSetOpenPrice": false,
+            "useBalanceForSell": false,
+            "measureUnit": "g",
+            "productCategoryId": "de8a2257-5150-4a0e-8721-bcbfd90f9a9b",
+            "customerTagGroups": [
+              {
+                "customerTagGroupId": "f95ce547-eb6a-486f-bcc2-f397f48095f1",
+                "selectedTagIds": ["e7514f75-6a36-43a7-8134-f470d6eff966"]
+              }
+            ],
+            "paymentSubject": "commodity",
+            "paymentSubjectCode": "01",
+            "outerEanCode": "4607000001000",
+            "isMarked": false,
+            "isHidden": false,
+            "barcodes": [
+              {
+                "barcode": "2200000001001",
+                "container": "box"
+              }
+            ],
+            "orderItemType": "Product",
+            "taxCategoryId": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0",
+            "allergenGroupIds": ["fdd18111-2cbf-4b0a-8562-f9d579feca95", "81de172f-46d7-44ed-bf89-c8fb4e36abeb"],
+            "labels": ["hit", "spicy"],
+            "tags": ["pizza", "premium"],
+            "id": "0c35555d-7ffe-43b6-98f5-f563d20cf3bb",
+            "splittable": true
+          },
+          {
+            "itemSizes": [
+              {
+                "itemModifierGroups": [],
+                "weight": 320,
+                "id": "8e7acff5-e61f-4063-ad73-00d7f2f637e6"
+              }
+            ],
+            "modifierSchemaId": "00000000-0000-0000-0000-000000000000",
+            "orderItemType": "Product",
+            "allergenGroupIds": [],
+            "id": "d9584ef7-cf5e-44c3-a281-3144eb88bb55",
+            "splittable": false
+          }
+        ]
+      },
+      {
+        "id": "cat-burgers",
+        "name": "Бургеры",
+        "description": "Классические и авторские бургеры",
+        "buttonImageUrl": "https://cdn.example.com/groups/burger.png",
+        "iikoGroupId": "0e53ef44-7d2d-4a84-a1f8-24e0fbc88e4d",
+        "scheduleId": "4af7736f-2bbf-4d91-a313-ad0fbf3a85c7",
+        "scheduleName": "Ежедневно",
+        "schedules": [
+          {
+            "begin": "10:00",
+            "end": "23:00",
+            "daysOfWeek": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          }
+        ],
+        "isHidden": false,
+        "labels": ["best-seller"],
+        "tags": ["american"],
+        "items": [
+          {
+            "sku": "BURGER-BEEF-XL",
+            "name": "Бургер BBQ XL",
+            "description": "Говяжья котлета, соус BBQ, маринованные огурцы, сыр чеддер.",
+            "itemSizes": [
+              {
+                "sku": "BURGER-BEEF-XL-STD",
+                "sizeCode": "STD",
+                "sizeName": "Стандарт",
+                "isDefault": true,
+                "itemModifierGroups": [],
+                "prices": [
+                  {
+                    "organizations": [
+                      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f"
+                    ],
+                    "price": 389,
+                    "taxCategoryId": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0"
+                  }
+                ],
+                "nutritions": [
+                  {
+                    "fats": 15.2,
+                    "proteins": 13.0,
+                    "carbs": 26.1,
+                    "energy": 305,
+                    "organizations": [
+                      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f"
+                    ],
+                    "saturatedFattyAcid": 5.0,
+                    "salt": 1.5,
+                    "sugar": 3.1
+                  }
+                ],
+                "isHidden": false,
+                "measureUnitType": "GRAM",
+                "buttonImageUrl": "https://cdn.example.com/sizes/burger-std.png",
+                "weight": 280,
+                "id": "3cd8f233-16af-4147-b2b6-935c8336632d"
+              }
+            ],
+            "modifierSchemaId": "e4eb9d8f-c761-4bfd-8f3a-13dcb3b457e6",
+            "modifierSchemaName": "Бургер стандарт",
+            "type": "DISH",
+            "canSetOpenPrice": false,
+            "useBalanceForSell": false,
+            "measureUnit": "g",
+            "productCategoryId": "de8a2257-5150-4a0e-8721-bcbfd90f9a9b",
+            "customerTagGroups": [],
+            "paymentSubject": "commodity",
+            "paymentSubjectCode": "01",
+            "outerEanCode": "4607000001017",
+            "isMarked": false,
+            "isHidden": false,
+            "barcodes": [
+              {
+                "barcode": "2200000001018",
+                "container": "wrap"
+              }
+            ],
+            "orderItemType": "Product",
+            "taxCategoryId": "fbb153e2-e48b-43aa-ac7a-b0a945fbeaf0",
+            "allergenGroupIds": ["fdd18111-2cbf-4b0a-8562-f9d579feca95"],
+            "labels": ["bbq"],
+            "tags": ["burger", "meat"],
+            "id": "85d4ca90-e886-47f9-8ec5-3d3555039782",
+            "splittable": false
+          },
+          {
+            "itemSizes": [
+              {
+                "itemModifierGroups": [],
+                "weight": 180,
+                "id": "36f5afec-7a7d-4fb8-b4f8-268187f6213e"
+              }
+            ],
+            "modifierSchemaId": "00000000-0000-0000-0000-000000000000",
+            "orderItemType": "Product",
+            "allergenGroupIds": [],
+            "id": "18203062-f29d-47e8-b623-d53be47ff7ef",
+            "splittable": false
+          }
+        ]
+      },
+      {
+        "id": "cat-drinks",
+        "name": "Напитки",
+        "description": "Газированные и негазированные напитки",
+        "buttonImageUrl": "https://cdn.example.com/groups/drinks.png",
+        "iikoGroupId": "7afe66c9-c3f3-4139-b0d9-a64db8f5a278",
+        "scheduleId": "5f32b5ef-d024-4740-916c-7e7b469f38e0",
+        "scheduleName": "Круглосуточно",
+        "schedules": [
+          {
+            "begin": "00:00",
+            "end": "23:59",
+            "daysOfWeek": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          }
+        ],
+        "isHidden": false,
+        "labels": [],
+        "tags": ["cold"],
+        "items": [
+          {
+            "sku": "DRINK-COLA-05",
+            "name": "Кола 0.5",
+            "description": "Газированный напиток, 0.5 л",
+            "itemSizes": [
+              {
+                "sku": "DRINK-COLA-05-ONE",
+                "sizeCode": "500ML",
+                "sizeName": "0.5 л",
+                "isDefault": true,
+                "itemModifierGroups": [],
+                "prices": [
+                  {
+                    "organizations": [
+                      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f",
+                      "3d2b4ef0-746f-4e0b-8f53-a2e30f8de104"
+                    ],
+                    "price": 149,
+                    "taxCategoryId": "80bb195c-5aaf-49e0-b1f8-d0af805f8b2f"
+                  }
+                ],
+                "nutritions": [
+                  {
+                    "fats": 0,
+                    "proteins": 0,
+                    "carbs": 10.6,
+                    "energy": 42,
+                    "organizations": [
+                      "706e5f4a-3efa-49f0-8f1c-15a6c1603e1f"
+                    ],
+                    "saturatedFattyAcid": null,
+                    "salt": 0.02,
+                    "sugar": 10.6
+                  }
+                ],
+                "isHidden": false,
+                "measureUnitType": "LITER",
+                "buttonImageUrl": "https://cdn.example.com/sizes/500ml.png",
+                "weight": 500,
+                "id": "77f6358e-23e5-430a-96a0-1c86df4e2140"
+              }
+            ],
+            "modifierSchemaId": "00000000-0000-0000-0000-000000000000",
+            "modifierSchemaName": null,
+            "type": "DISH",
+            "canSetOpenPrice": false,
+            "useBalanceForSell": false,
+            "measureUnit": "ml",
+            "productCategoryId": "40af9f6f-6c8a-48b2-a4fe-c6ce23d8dcf4",
+            "customerTagGroups": [],
+            "paymentSubject": "commodity",
+            "paymentSubjectCode": "01",
+            "outerEanCode": "4607000001024",
+            "isMarked": false,
+            "isHidden": false,
+            "barcodes": [
+              {
+                "barcode": "2200000001025",
+                "container": "bottle"
+              }
+            ],
+            "orderItemType": "Product",
+            "taxCategoryId": "80bb195c-5aaf-49e0-b1f8-d0af805f8b2f",
+            "allergenGroupIds": [],
+            "labels": ["drink"],
+            "tags": ["cola"],
+            "id": "089149a3-7dc8-40e3-bca8-cf401f29a8d0",
+            "splittable": false
+          },
+          {
+            "itemSizes": [
+              {
+                "itemModifierGroups": [],
+                "weight": 330,
+                "id": "e6e18922-ad7f-49f2-b9aa-2a8af9419fcd"
+              }
+            ],
+            "modifierSchemaId": "00000000-0000-0000-0000-000000000000",
+            "orderItemType": "Product",
+            "allergenGroupIds": [],
+            "id": "26144f22-e27e-4f4f-be8d-be19be6b9000",
+            "splittable": false
+          }
+        ]
+      }
+    ]
+  },
+  "categoryTree": [
+    {
+      "id": "cat-pizza",
+      "name": "Пицца",
+      "subcategories": [
+        {
+          "id": "sub-pizza-meat",
+          "name": "Мясные",
+          "itemIds": ["0c35555d-7ffe-43b6-98f5-f563d20cf3bb"]
+        },
+        {
+          "id": "sub-pizza-min",
+          "name": "Минимальные тест-кейсы",
+          "itemIds": ["d9584ef7-cf5e-44c3-a281-3144eb88bb55"]
+        }
+      ]
+    },
+    {
+      "id": "cat-burgers",
+      "name": "Бургеры",
+      "subcategories": [
+        {
+          "id": "sub-burger-classic",
+          "name": "Классические",
+          "itemIds": ["85d4ca90-e886-47f9-8ec5-3d3555039782"]
+        },
+        {
+          "id": "sub-burger-min",
+          "name": "Минимальные тест-кейсы",
+          "itemIds": ["18203062-f29d-47e8-b623-d53be47ff7ef"]
+        }
+      ]
+    },
+    {
+      "id": "cat-drinks",
+      "name": "Напитки",
+      "subcategories": [
+        {
+          "id": "sub-drinks-soda",
+          "name": "Газированные",
+          "itemIds": ["089149a3-7dc8-40e3-bca8-cf401f29a8d0"]
+        },
+        {
+          "id": "sub-drinks-min",
+          "name": "Минимальные тест-кейсы",
+          "itemIds": ["26144f22-e27e-4f4f-be8d-be19be6b9000"]
+        }
+      ]
+    }
+  ]
+}

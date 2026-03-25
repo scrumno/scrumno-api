@@ -3,9 +3,11 @@ package config
 import (
 	"time"
 
+	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
@@ -22,34 +24,44 @@ import (
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
-	"github.com/scrumno/scrumno-api/internal/iiko"
+	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
 	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
 	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
-	"github.com/scrumno/scrumno-api/shared/factory"
-	"github.com/scrumno/scrumno-api/shared/jwt"
-	"github.com/scrumno/scrumno-api/shared/sms"
+	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/sms"
 )
 
-func DI() *action.Actions {
-	cfg := Load()
+func DI(cfg *Config) *action.Actions {
+
+	/* INTEGRATION SYSTEMs */
+
+	var (
+		// service
+		orderProvider interfaces.OrderProvider
+		orderBuilder  interfaces.OrderBuilder
+
+		// config
+
+	)
+
+	/* INTEGRATION SYSTEMs END */
 
 	smsService := sms.NewSmsService(sms.Config{
 		ApiKey:         cfg.Sms.ApiKey,
 		ApiPhoneNumber: cfg.Sms.ApiPhoneNumber,
 	})
-
 	// repository
 	statusRepo := status.NewStatusRepository(DB)
-	userRepo := factory.NewGormRepository[userEntity.User](DB)
 	registrationRepo := authEntity.NewRegistrationRepository(DB)
 	tokensRepo := authorizeTokens.NewTokensRepository(DB)
 	codesRepo := codes.NewSmsCodesRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
-		AccessSecret:    string(cfg.JWT.SecretKey),
-		RefreshSecret:   string(cfg.JWT.SecretKey),
-		AccessTokenTtl:  15 * time.Minute,
-		RefreshTokenTtl: 7 * 24 * time.Hour,
+		AccessSecret: cfg.JWT.AccessSecret,
+		RefreshSecret: cfg.JWT.RefreshSecret,
+		AccessTokenTtl: cfg.JWT.AccessTokenTtl,
+		RefreshTokenTtl: cfg.JWT.RefreshTokenTtl,
 	})
 
 	// service
@@ -59,26 +71,26 @@ func DI() *action.Actions {
 	createUniqueCodeSvc := createUniqueCode.NewCreateUniqueCodeService()
 
 	// command
-	createUserHandler := createUser.NewCreateUserHandler(userRepo)
+	conditionsUpdateProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
+	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsUpdateProfilePolicy)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOntimeCodeHandler := checkOntimeCode.NewHandler(codesRepo)
 	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo)
 	createAuthorizeTokensHandler := createAuthorizeTokens.NewHandler(tokensRepo, jwtManager)
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
+	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
-	iikoContainer := iiko.NewContainer(&cfg.Iiko)
-
 	return &action.Actions{
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
 		// users
-		CreateUser: userAction.NewCreateUserAction(createUserHandler),
+		UpdateUserProfile: userAction.NewUpdateUserProfileAction(updateUserProfileHandler),
 
 		// auth
 		Registration:  authAction.NewRegistrationAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createUserAuthHandler, createAuthorizeTokensHandler),
@@ -89,6 +101,7 @@ func DI() *action.Actions {
 		JWTManager: jwtManager,
 		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
 
-		SetAccess: iikoContainer.SetAccess,
+		// orders
+		CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
 	}
 }

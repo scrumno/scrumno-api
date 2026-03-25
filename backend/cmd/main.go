@@ -14,6 +14,8 @@ import (
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
+    tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	userProfileEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
 )
 
 func main() {

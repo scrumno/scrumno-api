@@ -4,7 +4,7 @@ import (
 	"context"
 
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
-	"github.com/scrumno/scrumno-api/shared/jwt"
+	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
 
 type Fetcher struct {

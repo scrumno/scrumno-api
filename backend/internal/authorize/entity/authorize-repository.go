@@ -3,14 +3,15 @@ package entity
 import (
 	"context"
 
-	"github.com/scrumno/scrumno-api/shared/base"
-	"github.com/scrumno/scrumno-api/shared/factory"
+	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
+	"github.com/scrumno/scrumno-api/shared/interfaces/base"
 	"gorm.io/gorm"
 )
 
 type RegistrationRepository interface {
 	base.BaseRepository[User]
 	FindByPhone(ctx context.Context, phone string) (*User, error)
+	UpdateFieldsByPhone(ctx context.Context, phone string, fields map[string]any) error
 }
 
 type registrationGormRepository struct {
@@ -34,4 +35,15 @@ func (r *registrationGormRepository) FindByPhone(ctx context.Context, phone stri
 	}
 
 	return &u, nil
+}
+
+func (r *registrationGormRepository) UpdateFieldsByPhone(ctx context.Context, phone string, fields map[string]any) error {
+	if len(fields) == 0 {
+		return nil
+	}
+
+	return r.DB.WithContext(ctx).
+		Model(&User{}).
+		Where("phone = ?", phone).
+		Updates(fields).Error
 }

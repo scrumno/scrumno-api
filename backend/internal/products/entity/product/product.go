@@ -1,41 +1,37 @@
 package product
 
-import (
-	"time"
-
-	"github.com/google/uuid"
-	"github.com/scrumno/scrumno-api/internal/categories/entity/category"
-	"github.com/scrumno/scrumno-api/internal/organization/entity/venue"
-	productModifier "github.com/scrumno/scrumno-api/internal/products/entity/product-modifier"
-)
-
 type Product struct {
-	ID      uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"                        json:"id"`
-	VenueID uuid.UUID `gorm:"type:uuid;not null;index:idx_products_pwa_main,priority:1"             json:"venue_id"`
-	// ON DELETE RESTRICT — нельзя удалить категорию пока в ней есть товары.
-	CategoryID uuid.UUID `gorm:"type:uuid;index:idx_products_pwa_main,priority:2"                    json:"category_id"`
-	// UUID из POS-системы. Матчинг строго по UUID при синхронизации.
-	// Нет в нашей БД → INSERT, есть → UPDATE, нет в POS → soft delete.
-	ExternalID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_products_external_unique,priority:2" json:"external_id"`
+	ID uint `gorm:"primaryKey;autoIncrement"`
 
-	// Текущая цена из POS. Обновляется при синхронизации.
-	// На цену в заказе не влияет — там снапшот в order_items.unit_price.
-	Price       float64 `gorm:"type:numeric(12,2);not null"                              json:"price"`
-	ImageURL    *string `gorm:"type:text"                                                json:"image_url,omitempty"`
-	IsAvailable bool    `gorm:"default:true;index:idx_products_pwa_main,priority:3"      json:"is_available"`
-	SortOrder   int     `gorm:"default:0;index:idx_products_pwa_main,priority:4"         json:"sort_order"`
+	FatAmount               *float64    `json:"fatAmount" gorm:"type:numeric(10,3)"`
+	ProteinsAmount          *float64    `json:"proteinsAmount" gorm:"type:numeric(10,3)"`
+	CarbohydratesAmount     *float64    `json:"carbohydratesAmount" gorm:"type:numeric(10,3)"`
+	EnergyAmount            *float64    `json:"energyAmount" gorm:"type:numeric(10,3)"`
+	FatFullAmount           *float64    `json:"fatFullAmount" gorm:"type:numeric(10,3)"`
+	ProteinsFullAmount      *float64    `json:"proteinsFullAmount" gorm:"type:numeric(10,3)"`
+	CarbohydratesFullAmount *float64    `json:"carbohydratesFullAmount" gorm:"type:numeric(10,3)"`
+	EnergyFullAmount        *float64    `json:"energyFullAmount" gorm:"type:numeric(10,3)"`
+	Weight                  *float64    `json:"weight" gorm:"type:numeric(10,3)"`
+	GroupID                 *string     `json:"groupId" gorm:"size:128;index"`
+	ProductCategoryID       *string     `json:"productCategoryId" gorm:"size:128;index"`
+	Type                    *string     `json:"type" gorm:"size:128;index"`
+	OrderItemType           string      `json:"orderItemType" gorm:"size:128;index"`
+	ModifierSchemaID        *string     `json:"modifierSchemaId" gorm:"size:128;index"`
+	ModifierSchemaName      *string     `json:"modifierSchemaName" gorm:"size:255"`
+	Splittable              bool        `json:"splittable" gorm:"default:false"`
+	MeasureUnit             string      `json:"measureUnit" gorm:"size:32"`
+	SizePrices              []SizePrice `json:"sizePrices" gorm:"type:jsonb;serializer:json"`
+}
 
-	// Физические параметры и КБЖУ из POS.
-	// Блок КБЖУ показываем только если calories IS NOT NULL.
-	Weight   *int     `gorm:"type:integer"      json:"weight,omitempty"`
-	Calories *float64 `gorm:"type:numeric(8,2)" json:"calories,omitempty"`
-	Protein  *float64 `gorm:"type:numeric(8,2)" json:"protein,omitempty"`
-	Fat      *float64 `gorm:"type:numeric(8,2)" json:"fat,omitempty"`
-	Carbs    *float64 `gorm:"type:numeric(8,2)" json:"carbs,omitempty"`
+type SizePrice struct {
+	SizeID *string `json:"sizeId" gorm:"size:128;index"`
+	Price  Price   `json:"price" gorm:"embedded;embeddedPrefix:price_"`
+}
 
-	DeletedAt *time.Time `gorm:"index" json:"deleted_at,omitempty"`
-
-	Venue     venue.Venue                       `gorm:"foreignKey:VenueID"    json:"venue,omitempty"`
-	Category  category.Category                 `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
-	Modifiers []productModifier.ProductModifier `gorm:"foreignKey:ProductID"  json:"modifiers,omitempty"`
+type Price struct {
+	CurrentPrice       float64 `json:"currentPrice" gorm:"type:numeric(12,2);default:0"`
+	IsIncludedInMenu   bool    `json:"isIncludedInMenu" gorm:"default:true"`
+	NextPrice          float64 `json:"nextPrice" gorm:"type:numeric(12,2);default:0"`
+	NextIncludedInMenu bool    `json:"nextIncludedInMenu" gorm:"default:true"`
+	NextDatePrice      string  `json:"nextDatePrice" gorm:"size:128;index"`
 }

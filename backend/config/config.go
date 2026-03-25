@@ -1,7 +1,6 @@
 package config
 
 import (
-	iikoconfig "github.com/scrumno/scrumno-api/internal/iiko/config"
 	"github.com/scrumno/scrumno-api/shared/utils"
 )
 
@@ -10,11 +9,14 @@ type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Sms      SmsConfig
-	Iiko     iikoconfig.Config
 }
 
 type JWTConfig struct {
-	SecretKey []byte
+	SecretKey string
+	AccessTokenTtl time.Duration
+	RefreshTokenTtl time.Duration
+	AccessSecret string
+	RefreshSecret string
 }
 
 type SmsConfig struct {
@@ -23,8 +25,8 @@ type SmsConfig struct {
 }
 
 func Load() *Config {
-	secret := utils.GetEnv("JWT_SECRET", "default-dev-secret-change-in-production")
-	secretKey := []byte(secret)
+	accessTokenTtl, _ := strconv.Atoi(utils.GetEnv("JWT_ACCESS_TOKEN_TTL", "15"))
+	refreshTokenTtl, _ := strconv.Atoi(utils.GetEnv("JWT_REFRESH_TOKEN_TTL", "10080"))
 
 	return &Config{
 		Server: ServerConfig{
@@ -39,12 +41,15 @@ func Load() *Config {
 			SSLMode:      utils.GetEnv("DATABASE_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
-			SecretKey: secretKey,
+			SecretKey: utils.GetEnv("JWT_SECRET", ""),
+			AccessSecret:    utils.GetEnv("JWT_ACCESS_SECRET", ""),
+			RefreshSecret:   utils.GetEnv("JWT_REFRESH_SECRET", ""),
+			AccessTokenTtl:  time.Duration(accessTokenTtl) * time.Second,
+			RefreshTokenTtl: time.Duration(refreshTokenTtl) * time.Second,
 		},
 		Sms: SmsConfig{
 			ApiKey:         utils.GetEnv("SMS_API_KEY", ""),
 			ApiPhoneNumber: utils.GetEnv("SMS_API_PHONE_NUMBER", ""),
 		},
-		Iiko: iikoconfig.Load(),
 	}
 }

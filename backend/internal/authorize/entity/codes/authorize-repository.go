@@ -5,18 +5,18 @@ import (
 	"errors"
 	"time"
 
-	"github.com/scrumno/scrumno-api/shared/base"
-	"github.com/scrumno/scrumno-api/shared/factory"
+	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
+	"github.com/scrumno/scrumno-api/shared/interfaces/base"
 	"gorm.io/gorm"
 )
 
 var (
-	ErrRateLimitTooFrequent = errors.New("Повторная отправка возможна через 2 минуты")
+	ErrRateLimitTooFrequent = errors.New("Повторная отправка возможна через 1 минуту")
 	ErrRateLimitHourly      = errors.New("Превышен лимит запросов в час")
 )
 
 const (
-	minIntervalBetweenCodes = 2 * time.Minute
+	minIntervalBetweenCodes = 1 * time.Minute
 	maxCodesPerHour         = 5
 )
 
