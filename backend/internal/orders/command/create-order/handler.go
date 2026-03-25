@@ -3,8 +3,8 @@ package create_order
 import (
 	"context"
 
-	"github.com/scrumno/scrumno-api/infra/integration-system/iiko/order/model"
-	"github.com/scrumno/scrumno-api/infra/integration-system/shared/interfaces"
+	"github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/order/model"
+	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 )
 
 type Handler struct {

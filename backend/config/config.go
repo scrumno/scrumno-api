@@ -1,16 +1,14 @@
 package config
 
 import (
-	"github.com/scrumno/scrumno-api/infra/integration-system/shared"
 	"github.com/scrumno/scrumno-api/shared/utils"
 )
 
 type Config struct {
-	Server            ServerConfig
-	Database          DatabaseConfig
-	JWT               JWTConfig
-	Sms               SmsConfig
-	IntegrationSystem shared.IntegrationSystemConfig
+	Server   ServerConfig
+	Database DatabaseConfig
+	JWT      JWTConfig
+	Sms      SmsConfig
 }
 
 type JWTConfig struct {
@@ -44,9 +42,6 @@ func Load() *Config {
 		Sms: SmsConfig{
 			ApiKey:         utils.GetEnv("SMS_API_KEY", ""),
 			ApiPhoneNumber: utils.GetEnv("SMS_API_PHONE_NUMBER", ""),
-		},
-		IntegrationSystem: shared.IntegrationSystemConfig{
-			Provider: shared.ProviderType(utils.GetEnv("INTEGRATION_SYSTEM_PROVIDER", "iiko")),
 		},
 	}
 }
