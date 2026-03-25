@@ -1,8 +1,6 @@
 package config
 
 import (
-	"time"
-
 	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
@@ -25,11 +23,10 @@ import (
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
-	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
-	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
-	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
+	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
+	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 )
 
 func DI(cfg *Config) *action.Actions {
@@ -71,8 +68,8 @@ func DI(cfg *Config) *action.Actions {
 	createUniqueCodeSvc := createUniqueCode.NewCreateUniqueCodeService()
 
 	// command
-	conditionsUpdateProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
-	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsUpdateProfilePolicy)
+	conditionsProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
+	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsProfilePolicy)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOntimeCodeHandler := checkOntimeCode.NewHandler(codesRepo)
 	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo)
