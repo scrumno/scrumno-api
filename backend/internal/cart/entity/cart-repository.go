@@ -94,7 +94,8 @@ func (r *cartGormRepository) GetCartByUserId(ctx context.Context, userID uuid.UU
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			newCart := NewCart(userID)
-			if err := r.Create(ctx, newCart).Error; err != nil {
+			err := r.Create(ctx, newCart)
+			if err {
 				return nil, except.ErrCartCreate
 			}
 			return newCart, nil
