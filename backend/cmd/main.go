@@ -12,17 +12,14 @@ import (
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
-	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
 )
 
 func main() {
-	_ = godotenv.Overload(".env.local")
 	_ = godotenv.Overload(".env")
-	_ = godotenv.Overload("backend/.env.local")
-	_ = godotenv.Overload("backend/.env")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelError + 100,
