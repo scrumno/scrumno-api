@@ -111,7 +111,7 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"PUT",
 		"/update-user-profile",
 	)
-	
+
 	// INTEGRATION SYSTEMs
 	ordersPrefix := "/orders"
 	orders := api.PathPrefix(ordersPrefix).Subrouter()
@@ -124,6 +124,21 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"POST",
 		"/create-order",
 	)
+
+	// iiko integration endpoints
+	iikoPrefix := "/iiko"
+	iiko := api.PathPrefix(iikoPrefix).Subrouter()
+
+	if actions.RefreshMenu != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			iiko,
+			iikoPrefix,
+			actions.RefreshMenu.Action,
+			actions.RefreshMenu.GetInputType(),
+			"POST",
+			"/refresh-menu",
+		)
+	}
 	// INTEGRATION SYSTEMs END
 
 	err := collectorRoutes.GeneratePostmanCollections()

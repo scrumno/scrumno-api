@@ -1,9 +1,13 @@
 package interfaces
 
 type MenuProvider interface {
-	GetMenu(OrgId string) any
+	GetMenu() (any, error)
 }
 
 type MenuBuilder interface {
 	BuildBody(data any) (any, error)
+}
+
+type GetMenuHandler interface {
+	Handle() any
 }

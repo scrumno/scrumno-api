@@ -4,6 +4,7 @@ import (
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
+	menuAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
@@ -17,6 +18,9 @@ type Actions struct {
 
 	// orders
 	CreateOrder *orders.CreateOrderAction
+
+	// iiko
+	RefreshMenu *menuAction.RefreshMenuAction
 
 	// auth
 	Registration  *auth.RegistrationAction

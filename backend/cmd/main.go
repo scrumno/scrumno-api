@@ -9,20 +9,21 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
+	iikoConfig "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/config"
+	iikoMenuService "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/menu/service"
+	menuInterfaces "github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
-    tokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
-	userProfileEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
 )
 
 func main() {
-	_ = godotenv.Load(".env.local")
-	_ = godotenv.Load(".env")
-	_ = godotenv.Load("backend/.env.local")
-	_ = godotenv.Load("backend/.env")
+	_ = godotenv.Overload(".env.local")
+	_ = godotenv.Overload(".env")
+	_ = godotenv.Overload("backend/.env.local")
+	_ = godotenv.Overload("backend/.env")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -53,6 +54,12 @@ func main() {
 			logger.Error(err.Error())
 		}
 	}()
+
+	// Стартуем EventManager и регистрируем listeners один раз при запуске основного приложения.
+	em := config.GetEventManager()
+	iikoCfg := iikoConfig.Load()
+	var menuProvider menuInterfaces.MenuProvider = iikoMenuService.NewMenuProvider(iikoCfg)
+	config.InitEventManager(em, menuProvider)
 
 	actions := config.DI()
 

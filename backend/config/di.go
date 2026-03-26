@@ -3,12 +3,14 @@ package config
 import (
 	"time"
 
+	iikoConfig "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/config"
+	iikoMenuService "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/menu/service"
 	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
-	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
 	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
@@ -24,15 +26,17 @@ import (
 	createUniqueCode "github.com/scrumno/scrumno-api/internal/authorize/service/create-unique-code"
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
+	refreshMenu "github.com/scrumno/scrumno-api/internal/menu/command/refresh-menu"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
-	createUser "github.com/scrumno/scrumno-api/internal/users/command/create-user"
-	userEntity "github.com/scrumno/scrumno-api/internal/users/entity/user"
-	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
+	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
 )
 
-func DI(cfg *Config) *action.Actions {
+func DI() *action.Actions {
+	cfg := Load()
+
+	em := eventManager.New()
 
 	/* INTEGRATION SYSTEMs */
 
@@ -41,9 +45,32 @@ func DI(cfg *Config) *action.Actions {
 		orderProvider interfaces.OrderProvider
 		orderBuilder  interfaces.OrderBuilder
 
-		// config
+		menuProvider interfaces.MenuProvider
 
+		// handlers
+		getMenuHandler interfaces.GetMenuHandler
+
+		// actions
+		refreshMenuAction menu.RefreshMenuAction
+
+		// config
 	)
+	var iikoCfg *iikoConfig.Config
+
+	switch cfg.IntegrationSystem.IntegrationSystem {
+
+	case "iiko":
+		iikoCfg = iikoConfig.Load()
+
+		// services
+		menuProvider = iikoMenuService.NewMenuProvider(iikoCfg)
+
+		// handlers
+		getMenuHandler = refreshMenu.NewHandler(menuProvider, em)
+
+		// actions
+		refreshMenuAction = menu.NewRefreshMenuAction(getMenuHandler)
+	}
 
 	/* INTEGRATION SYSTEMs END */
 
@@ -51,6 +78,7 @@ func DI(cfg *Config) *action.Actions {
 		ApiKey:         cfg.Sms.ApiKey,
 		ApiPhoneNumber: cfg.Sms.ApiPhoneNumber,
 	})
+
 	// repository
 	statusRepo := status.NewStatusRepository(DB)
 	registrationRepo := authEntity.NewRegistrationRepository(DB)
@@ -58,10 +86,10 @@ func DI(cfg *Config) *action.Actions {
 	codesRepo := codes.NewSmsCodesRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
-		AccessSecret: cfg.JWT.AccessSecret,
-		RefreshSecret: cfg.JWT.RefreshSecret,
-		AccessTokenTtl: cfg.JWT.AccessTokenTtl,
-		RefreshTokenTtl: cfg.JWT.RefreshTokenTtl,
+		AccessSecret:    string(cfg.JWT.SecretKey),
+		RefreshSecret:   string(cfg.JWT.SecretKey),
+		AccessTokenTtl:  15 * time.Minute,
+		RefreshTokenTtl: 7 * 24 * time.Hour,
 	})
 
 	// service
@@ -71,8 +99,6 @@ func DI(cfg *Config) *action.Actions {
 	createUniqueCodeSvc := createUniqueCode.NewCreateUniqueCodeService()
 
 	// command
-	conditionsUpdateProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
-	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsUpdateProfilePolicy)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOntimeCodeHandler := checkOntimeCode.NewHandler(codesRepo)
 	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo)
@@ -80,6 +106,7 @@ func DI(cfg *Config) *action.Actions {
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
 	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
+
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
@@ -90,7 +117,6 @@ func DI(cfg *Config) *action.Actions {
 		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
 		// users
-		UpdateUserProfile: userAction.NewUpdateUserProfileAction(updateUserProfileHandler),
 
 		// auth
 		Registration:  authAction.NewRegistrationAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createUserAuthHandler, createAuthorizeTokensHandler),
@@ -103,5 +129,8 @@ func DI(cfg *Config) *action.Actions {
 
 		// orders
 		CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
+
+		// общие экшены для всех интеграционных систем
+		RefreshMenu: &refreshMenuAction,
 	}
 }

@@ -41,7 +41,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"birthDate,omitempty\": \"\",\n  \"email,omitempty\": \"\",\n  \"fullName,omitempty\": \"\",\n  \"isActive,omitempty\": false\n}",
+                            "raw": "{\n  \"birthDate,omitempty\": \"21.03.2026\",\n  \"email,omitempty\": \"user@example.com\",\n  \"fullName,omitempty\": \"Пользователь\",\n  \"isActive,omitempty\": \"false\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
