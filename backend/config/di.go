@@ -11,6 +11,7 @@ import (
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
 	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
@@ -31,11 +32,11 @@ import (
 	saveProductCommand "github.com/scrumno/scrumno-api/internal/products/command/save-product"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
 	saveProductListener "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
+	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
+	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
-	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
-	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -129,6 +130,7 @@ func DI() (*action.Actions, *action.Listeners) {
 			CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
 			// users
+			UpdateUserProfile: user.NewUpdateUserProfileAction(updateUserProfileHandler),
 
 			// auth
 			Registration:  authAction.NewRegistrationAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createUserAuthHandler, createAuthorizeTokensHandler),
