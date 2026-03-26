@@ -34,6 +34,8 @@ import (
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
+	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
+	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -103,6 +105,8 @@ func DI() (*action.Actions, *action.Listeners) {
 	createUniqueCodeSvc := createUniqueCode.NewCreateUniqueCodeService()
 
 	// command
+	conditionsProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
+	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsProfilePolicy)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOntimeCodeHandler := checkOntimeCode.NewHandler(codesRepo)
 	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo)
