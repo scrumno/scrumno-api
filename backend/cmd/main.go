@@ -17,6 +17,7 @@ import (
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
+	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 	_ = godotenv.Overload("backend/.env")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
+		Level: slog.LevelError + 100,
 	}))
 	slog.SetDefault(logger)
 
@@ -39,6 +40,8 @@ func main() {
 	config.DB.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
 
 	if err := config.Migrate(
+		&cartEntity.Cart{},
+		&cartEntity.CartItem{},
 		&user.User{},
 		&staffRole.StaffRole{},
 		&codes.AuthorizeCode{},
