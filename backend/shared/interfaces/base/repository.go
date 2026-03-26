@@ -14,4 +14,5 @@ type BaseRepository[T any] interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetAll(ctx context.Context, offset, limit int) ([]T, error)
 	FindAll(ctx context.Context, offset, limit int) ([]T, error)
+	Save(ctx context.Context, entity *T) (*T, error)
 }

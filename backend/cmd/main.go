@@ -9,12 +9,10 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
-	iikoConfig "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/config"
-	iikoMenuService "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/menu/service"
-	menuInterfaces "github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
+	"github.com/scrumno/scrumno-api/internal/products/entity/product"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 )
@@ -43,6 +41,7 @@ func main() {
 		&staffRole.StaffRole{},
 		&codes.AuthorizeCode{},
 		&authorizeTokens.AuthorizeToken{},
+		&product.Product{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)
@@ -55,13 +54,12 @@ func main() {
 		}
 	}()
 
+	actions, listeners := config.DI()
+
 	// Стартуем EventManager и регистрируем listeners один раз при запуске основного приложения.
 	em := config.GetEventManager()
-	iikoCfg := iikoConfig.Load()
-	var menuProvider menuInterfaces.MenuProvider = iikoMenuService.NewMenuProvider(iikoCfg)
-	config.InitEventManager(em, menuProvider)
-
-	actions := config.DI()
+	config.InitEventManager(em, listeners)
+	em.Start()
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port

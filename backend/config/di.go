@@ -28,12 +28,15 @@ import (
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
 	refreshMenu "github.com/scrumno/scrumno-api/internal/menu/command/refresh-menu"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
+	saveProductCommand "github.com/scrumno/scrumno-api/internal/products/command/save-product"
+	"github.com/scrumno/scrumno-api/internal/products/entity/product"
+	saveProductListener "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
 )
 
-func DI() *action.Actions {
+func DI() (*action.Actions, *action.Listeners) {
 	cfg := Load()
 
 	em := eventManager.New()
@@ -84,6 +87,7 @@ func DI() *action.Actions {
 	registrationRepo := authEntity.NewRegistrationRepository(DB)
 	tokensRepo := authorizeTokens.NewTokensRepository(DB)
 	codesRepo := codes.NewSmsCodesRepository(DB)
+	productRepo := product.NewProductRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		AccessSecret:    string(cfg.JWT.SecretKey),
@@ -107,30 +111,37 @@ func DI() *action.Actions {
 
 	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 
+	saveProductHandler := saveProductCommand.NewHandler(productRepo)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
+	// listeners
+	saveProductListener := saveProductListener.NewListener(saveProductHandler)
+
 	return &action.Actions{
-		CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
+			CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
 
-		// users
+			// users
 
-		// auth
-		Registration:  authAction.NewRegistrationAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createUserAuthHandler, createAuthorizeTokensHandler),
-		Authorize:     authAction.NewAuthorizeAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createAuthorizeTokensHandler),
-		Logout:        authAction.NewLogoutAction(logoutHandler, findUserByPhoneFetcher),
-		RefreshTokens: authAction.NewRefreshTokensAction(getRefreshTokensFetcher, findUserByPhoneFetcher, createAuthorizeTokensHandler),
+			// auth
+			Registration:  authAction.NewRegistrationAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createUserAuthHandler, createAuthorizeTokensHandler),
+			Authorize:     authAction.NewAuthorizeAction(findUserByPhoneFetcher, checkOntimeCodeHandler, createAuthorizeTokensHandler),
+			Logout:        authAction.NewLogoutAction(logoutHandler, findUserByPhoneFetcher),
+			RefreshTokens: authAction.NewRefreshTokensAction(getRefreshTokensFetcher, findUserByPhoneFetcher, createAuthorizeTokensHandler),
 
-		JWTManager: jwtManager,
-		SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
+			JWTManager: jwtManager,
+			SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
 
-		// orders
-		CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
+			// orders
+			CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
 
-		// общие экшены для всех интеграционных систем
-		RefreshMenu: &refreshMenuAction,
-	}
+			// общие экшены для всех интеграционных систем
+			RefreshMenu: &refreshMenuAction,
+		},
+		&action.Listeners{
+			SaveProduct: saveProductListener,
+		}
 }
