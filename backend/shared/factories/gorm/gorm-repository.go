@@ -51,3 +51,8 @@ func (repo *GormRepository[T]) Delete(ctx context.Context, id uuid.UUID) error {
 	var entity T
 	return repo.DB.WithContext(ctx).Delete(&entity, id).Error
 }
+
+func (repo *GormRepository[T]) Save(ctx context.Context, entity *T) (*T, error) {
+	err := repo.DB.WithContext(ctx).Save(entity).Error
+	return entity, err
+}

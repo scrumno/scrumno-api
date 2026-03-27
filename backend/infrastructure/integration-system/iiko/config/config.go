@@ -4,6 +4,8 @@ import "os"
 
 type Config struct {
 	BaseURL         string `env:"IIKO_BASE_URL"`
+	Login           string `env:"IIKO_LOGIN"`
+	AccessToken     string `env:"IIKO_ACCESS_TOKEN"`
 	OrganizationID  string `env:"IIKO_ORGANIZATION_ID"`
 	TerminalGroupID string `env:"IIKO_TERMINAL_GROUP_ID"`
 }
@@ -11,6 +13,8 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		BaseURL:         os.Getenv("IIKO_BASE_URL"),
+		Login:           os.Getenv("IIKO_LOGIN"),
+		AccessToken:     os.Getenv("IIKO_ACCESS_TOKEN"),
 		OrganizationID:  os.Getenv("IIKO_ORGANIZATION_ID"),
 		TerminalGroupID: os.Getenv("IIKO_TERMINAL_GROUP_ID"),
 	}
