@@ -3,8 +3,10 @@ package action
 import (
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	menuAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
+	saveProduct "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
 
@@ -18,6 +20,9 @@ type Actions struct {
 	// orders
 	CreateOrder *orders.CreateOrderAction
 
+	// iiko
+	RefreshMenu *menuAction.RefreshMenuAction
+
 	// auth
 	Registration  *auth.RegistrationAction
 	Authorize     *auth.AuthorizeAction
@@ -27,4 +32,8 @@ type Actions struct {
 	JWTManager *jwt.Manager
 
 	SmsCode *auth.AuthCodeAction
+}
+
+type Listeners struct {
+	SaveProduct *saveProduct.Listener
 }
