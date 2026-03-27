@@ -37,6 +37,8 @@ import (
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
+	"github.com/scrumno/scrumno-api/shared/services/snapshot"
+	fileStorage "github.com/scrumno/scrumno-api/shared/services/storage"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -48,8 +50,10 @@ func DI() (*action.Actions, *action.Listeners) {
 
 	var (
 		// service
-		orderProvider interfaces.OrderProvider
-		orderBuilder  interfaces.OrderBuilder
+		orderProvider   interfaces.OrderProvider
+		orderBuilder    interfaces.OrderBuilder
+		snapshotService interfaces.SnapshotService
+		snapshotStore   interfaces.SnapshotStore
 
 		menuProvider interfaces.MenuProvider
 
@@ -70,9 +74,11 @@ func DI() (*action.Actions, *action.Listeners) {
 
 		// services
 		menuProvider = iikoMenuService.NewMenuProvider(iikoCfg)
+		snapshotStore = fileStorage.NewFileStore(iikoCfg.SnapshotFilePath)
+		snapshotService = snapshot.NewSnapshotService(snapshotStore)
 
 		// handlers
-		getMenuHandler = refreshMenu.NewHandler(menuProvider, em)
+		getMenuHandler = refreshMenu.NewHandler(menuProvider, em, snapshotService)
 
 		// actions
 		refreshMenuAction = menu.NewRefreshMenuAction(getMenuHandler)

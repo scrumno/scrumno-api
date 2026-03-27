@@ -6,14 +6,16 @@ import (
 )
 
 type Handler struct {
-	provider     interfaces.MenuProvider
-	eventManager *eventManager.EventManager
+	provider        interfaces.MenuProvider
+	eventManager    *eventManager.EventManager
+	snapshotService interfaces.SnapshotService
 }
 
-func NewHandler(provider interfaces.MenuProvider, eventManager *eventManager.EventManager) *Handler {
+func NewHandler(provider interfaces.MenuProvider, eventManager *eventManager.EventManager, snapshotService interfaces.SnapshotService) *Handler {
 	return &Handler{
-		provider:     provider,
-		eventManager: eventManager,
+		provider:        provider,
+		eventManager:    eventManager,
+		snapshotService: snapshotService,
 	}
 }
 

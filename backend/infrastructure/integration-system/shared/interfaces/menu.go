@@ -11,3 +11,13 @@ type MenuBuilder interface {
 type GetMenuHandler interface {
 	Handle() any
 }
+
+type SnapshotService interface {
+	GenerateHash(payload any) (string, error)
+	CheckAndSave(key string, payload any) (bool, error)
+}
+
+type SnapshotStore interface {
+	Get(key string) (string, error)
+	Set(key string, hash string) error
+}
