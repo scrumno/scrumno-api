@@ -10,19 +10,19 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
+	user "github.com/scrumno/scrumno-api/internal/authorize/entity"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
-	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 )
 
 func main() {
 	_ = godotenv.Overload(".env")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelError + 100,
+		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
 

@@ -1,4 +1,4 @@
-package update_product_to_cart
+package remmove_product
 
 import (
 	"github.com/google/uuid"
@@ -7,5 +7,4 @@ import (
 type Command struct {
 	UserID    uuid.UUID
 	ProductID uuid.UUID
-	Quantity  float64
 }

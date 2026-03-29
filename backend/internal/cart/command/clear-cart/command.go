@@ -1,4 +1,4 @@
-package create_cart
+package clear_cart
 
 import (
 	"github.com/google/uuid"

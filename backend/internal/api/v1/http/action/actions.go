@@ -2,6 +2,8 @@ package action
 
 import (
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
+	cartAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/cart/cart"
+	cartProductAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/cart/product"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	menuAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
@@ -19,6 +21,14 @@ type Actions struct {
 
 	// orders
 	CreateOrder *orders.CreateOrderAction
+
+	// cart
+	CreateCart            *cartAction.CreateAction
+	ClearCart             *cartAction.ClearAction
+	AddProductToCart      *cartProductAction.AddProductAction
+	RemoveProductFromCart *cartProductAction.RemoveProductAction
+	UpdateProductFromCart *cartProductAction.UpdateAction
+	GetCart               *cartAction.GetCartAction
 
 	// iiko
 	RefreshMenu *menuAction.RefreshMenuAction

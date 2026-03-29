@@ -112,6 +112,67 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"/update-user-profile",
 	)
 
+	cartPrefix := "/cart"
+	cartRouter := api.PathPrefix(cartPrefix).Subrouter()
+
+	if actions.JWTManager != nil {
+		cartRouter.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
+	}
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.CreateCart.Action,
+		actions.CreateCart.GetInputType(),
+		"POST",
+		"/create",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.AddProductToCart.Action,
+		actions.AddProductToCart.GetInputType(),
+		"POST",
+		"/add-product",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.RemoveProductFromCart.Action,
+		actions.RemoveProductFromCart.GetInputType(),
+		"POST",
+		"/remove-product",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.UpdateProductFromCart.Action,
+		actions.UpdateProductFromCart.GetInputType(),
+		"PUT",
+		"/update-product",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.ClearCart.Action,
+		actions.ClearCart.GetInputType(),
+		"POST",
+		"/clear-cart",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.GetCart.Action,
+		actions.GetCart.GetInputType(),
+		"GET",
+		"",
+	)
+
 	// INTEGRATION SYSTEMs
 	ordersPrefix := "/orders"
 	orders := api.PathPrefix(ordersPrefix).Subrouter()

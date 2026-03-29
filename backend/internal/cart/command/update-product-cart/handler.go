@@ -4,7 +4,6 @@ import (
 	"context"
 
 	cartRepo "github.com/scrumno/scrumno-api/internal/cart/entity"
-	except "github.com/scrumno/scrumno-api/shared/exception/cart"
 )
 
 type Handler struct {
@@ -17,18 +16,20 @@ func NewHandler(cartRepo cartRepo.CartRepository) *Handler {
 	}
 }
 
-func (h *Handler) Handler(ctx context.Context, cmd Command) error {
+func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	cart, err := h.cr.GetCartByUserId(ctx, cmd.UserID)
 	if err != nil {
 		return err
 	}
 
-	var productPrice float64
+	var unitPrice float64
+	var quantityDelta float64
 	found := false
 
-	for _, product := range cart.Items {
-		if product.ID == cmd.ProductID {
-			productPrice = float64(product.UnitPrice) * float64(cmd.Quantity)
+	for _, item := range cart.Items {
+		if item.ProductID == cmd.ProductID {
+			unitPrice = item.BasePrice
+			quantityDelta = cmd.Quantity - item.Quantity
 			found = true
 			break
 		}
@@ -38,21 +39,13 @@ func (h *Handler) Handler(ctx context.Context, cmd Command) error {
 		return nil
 	}
 
-	isUpdated, err := h.cr.UpdateCartProduct(
+	_, err = h.cr.UpdateCartProduct(
 		ctx,
 		cmd.ProductID,
-		cmd.Quantity,
-		productPrice,
+		quantityDelta,
+		unitPrice,
 		cart,
 	)
 
-	if err != nil {
-		return err
-	}
-
-	if !isUpdated {
-		return except.ErrCartUpdated
-	}
-
-	return nil
+	return err
 }

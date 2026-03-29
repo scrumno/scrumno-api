@@ -13,11 +13,9 @@ func JSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		slog.Error("Error encoding response:", err)
+		slog.Error("Error encoding response:", err.Error())
 		return
 	}
-
-	return
 }
 
 func DecodeJSONBody(r *http.Request, dst interface{}) error {

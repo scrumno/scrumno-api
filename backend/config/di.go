@@ -8,6 +8,8 @@ import (
 	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
+	cartAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/cart/cart"
+	cartProductAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/cart/product"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
@@ -37,6 +39,15 @@ import (
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
+
+	// Cart
+	addProduct "github.com/scrumno/scrumno-api/internal/cart/command/add-product-to-cart"
+	clearCart "github.com/scrumno/scrumno-api/internal/cart/command/clear-cart"
+	createCart "github.com/scrumno/scrumno-api/internal/cart/command/create-cart"
+	removeProduct "github.com/scrumno/scrumno-api/internal/cart/command/remove-product"
+	updateProduct "github.com/scrumno/scrumno-api/internal/cart/command/update-product-cart"
+	cart "github.com/scrumno/scrumno-api/internal/cart/entity"
+	getCart "github.com/scrumno/scrumno-api/internal/cart/query/get-cart-by-user-id"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -91,6 +102,7 @@ func DI() (*action.Actions, *action.Listeners) {
 	tokensRepo := authorizeTokens.NewTokensRepository(DB)
 	codesRepo := codes.NewSmsCodesRepository(DB)
 	productRepo := product.NewProductRepository(DB)
+	cartRepo := cart.NewCartRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		AccessSecret:    string(cfg.JWT.SecretKey),
@@ -117,6 +129,14 @@ func DI() (*action.Actions, *action.Listeners) {
 	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 
 	saveProductHandler := saveProductCommand.NewHandler(productRepo)
+
+	createCartHandler := createCart.NewHandler(cartRepo)
+	clearCartHandler := clearCart.NewHandler(cartRepo)
+	addProductHandler := addProduct.NewHandler(cartRepo)
+	removeProductHandler := removeProduct.NewHandler(cartRepo)
+	updateProductHandler := updateProduct.NewHandler(cartRepo)
+	getCartFetcher := getCart.NewFetcher(cartRepo)
+
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
@@ -143,6 +163,15 @@ func DI() (*action.Actions, *action.Listeners) {
 
 			// orders
 			CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
+
+			// cart
+			CreateCart: cartAction.NewCreateAction(createCartHandler),
+			ClearCart:  cartAction.NewClearAction(clearCartHandler),
+			GetCart:    cartAction.NewGetCartAction(getCartFetcher),
+
+			AddProductToCart:      cartProductAction.NewAddProductAction(addProductHandler),
+			RemoveProductFromCart: cartProductAction.NewRemoveProductAction(removeProductHandler),
+			UpdateProductFromCart: cartProductAction.NewUpdateAction(updateProductHandler),
 
 			// общие экшены для всех интеграционных систем
 			RefreshMenu: &refreshMenuAction,

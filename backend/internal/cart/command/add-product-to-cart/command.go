@@ -7,6 +7,6 @@ import (
 type Command struct {
 	UserID    uuid.UUID
 	ProductID uuid.UUID
-	Quantity  int
+	Quantity  float64
 	BasePrice float64
 }

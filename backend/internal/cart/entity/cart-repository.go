@@ -3,6 +3,7 @@ package entity
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,11 +13,18 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	maxCartItemAmount = 999.999
+	qtyEpsilon        = 1e-6
+)
+
 type CartRepository interface {
 	base.BaseRepository[Cart]
-	AddProductToCart(ctx context.Context, userID uuid.UUID, productID uuid.UUID, quantity int, price float64) error
+	AddProductToCart(ctx context.Context, userID uuid.UUID, productID uuid.UUID, quantity float64, unitPrice float64) error
 	GetCartByUserId(ctx context.Context, userID uuid.UUID) (*Cart, error)
-	UpdateCartProduct(ctx context.Context, productID uuid.UUID, quantity int, price float64, cart *Cart) (bool, error)
+	UpdateCartProduct(ctx context.Context, productID uuid.UUID, quantityDelta float64, unitPrice float64, cart *Cart) (bool, error)
+	RemoveProduct(ctx context.Context, userID uuid.UUID, productID uuid.UUID) error
+	ClearCart(ctx context.Context, userID uuid.UUID) error
 }
 
 type cartGormRepository struct {
@@ -29,39 +37,59 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 	}
 }
 
-func (r *cartGormRepository) AddProductToCart(ctx context.Context, userID uuid.UUID, productID uuid.UUID, quantity int, price float64) error {
-
-	cart, err := r.GetCartByUserId(ctx, userID)
-	if err != nil {
-		return err
+func validateCartItemAmount(q float64) error {
+	if q <= 0 {
+		return except.ErrCartInvalidQuantity
 	}
-
-	updated, err := r.UpdateCartProduct(ctx, productID, quantity, price, cart)
-	if err != nil {
-		return err
-	}
-
-	if updated {
-		return nil
-	}
-
-	newProductItem := CartItem{
-		ID:        uuid.New(),
-		CartID:    cart.ID,
-		ProductID: productID,
-		Quantity:  quantity,
-		UnitPrice: price,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	if err := r.DB.WithContext(ctx).Create(&newProductItem).Error; err != nil {
-		return except.ErrCartAddProduct
+	if q > maxCartItemAmount+qtyEpsilon {
+		return except.ErrCartInvalidQuantity
 	}
 	return nil
 }
 
-func (r *cartGormRepository) UpdateCartProduct(ctx context.Context, productID uuid.UUID, quantity int, price float64, cart *Cart) (bool, error) {
+func (r *cartGormRepository) AddProductToCart(ctx context.Context, userID uuid.UUID, productID uuid.UUID, quantity float64, unitPrice float64) error {
+	if err := validateCartItemAmount(quantity); err != nil {
+		return err
+	}
+	if unitPrice <= 0 {
+		return except.ErrCartInvalidPrice
+	}
+
+	return r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		cart, err := r.getCartByUserIDWithDB(ctx, tx, userID)
+		if err != nil {
+			return err
+		}
+
+		updated, err := r.updateCartProductWithDB(ctx, tx, productID, quantity, unitPrice, cart)
+		if err != nil {
+			return err
+		}
+		if updated {
+			return nil
+		}
+
+		lineTotal := quantity * unitPrice
+		newProductItem := CartItem{
+			ID:          uuid.New(),
+			CartID:      cart.ID,
+			ProductID:   productID,
+			Quantity:    quantity,
+			BasePrice:   unitPrice,
+			TotalPrice:  lineTotal,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Components:  []byte("{}"),
+		}
+		if err := tx.WithContext(ctx).Create(&newProductItem).Error; err != nil {
+			return fmt.Errorf("%w: %v", except.ErrCartAddProduct, err)
+		}
+
+		return r.recalculateTotalAmountWithDB(ctx, tx, cart.ID)
+	})
+}
+
+func (r *cartGormRepository) updateCartProductWithDB(ctx context.Context, db *gorm.DB, productID uuid.UUID, quantityDelta float64, unitPrice float64, cart *Cart) (bool, error) {
 	var existingItem *CartItem
 	for i, item := range cart.Items {
 		if item.ProductID == productID {
@@ -71,22 +99,46 @@ func (r *cartGormRepository) UpdateCartProduct(ctx context.Context, productID uu
 	}
 
 	if existingItem != nil {
-		existingItem.Quantity += quantity
-		existingItem.UnitPrice = price
+		newQuantity := existingItem.Quantity + quantityDelta
+		if newQuantity < -qtyEpsilon {
+			return false, except.ErrCartInvalidQuantity
+		}
+		if unitPrice <= 0 {
+			return false, except.ErrCartInvalidPrice
+		}
+		if newQuantity > maxCartItemAmount+qtyEpsilon {
+			return false, except.ErrCartInvalidQuantity
+		}
+
+		existingItem.Quantity = newQuantity
+		existingItem.BasePrice = unitPrice
+		existingItem.TotalPrice = newQuantity * unitPrice
 		existingItem.UpdatedAt = time.Now()
-		if err := r.DB.WithContext(ctx).Save(existingItem).Error; err != nil {
+
+		if newQuantity <= qtyEpsilon {
+			if err := db.WithContext(ctx).
+				Where("cart_id = ? AND product_id = ?", cart.ID, productID).
+				Delete(&CartItem{}).Error; err != nil {
+				return false, except.ErrCartUpdated
+			}
+		} else if err := db.WithContext(ctx).Save(existingItem).Error; err != nil {
 			return false, except.ErrCartUpdated
 		}
+
+		if err := r.recalculateTotalAmountWithDB(ctx, db, cart.ID); err != nil {
+			return false, err
+		}
+
 		return true, nil
 	}
 
 	return false, nil
 }
 
-func (r *cartGormRepository) GetCartByUserId(ctx context.Context, userID uuid.UUID) (*Cart, error) {
+func (r *cartGormRepository) getCartByUserIDWithDB(ctx context.Context, db *gorm.DB, userID uuid.UUID) (*Cart, error) {
 	var cart Cart
 
-	err := r.DB.WithContext(ctx).
+	err := db.WithContext(ctx).
 		Where("user_id = ?", userID).
 		Preload("Items").
 		First(&cart).Error
@@ -94,8 +146,7 @@ func (r *cartGormRepository) GetCartByUserId(ctx context.Context, userID uuid.UU
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			newCart := NewCart(userID)
-			err := r.Create(ctx, newCart)
-			if err {
+			if err := db.WithContext(ctx).Create(newCart).Error; err != nil {
 				return nil, except.ErrCartCreate
 			}
 			return newCart, nil
@@ -105,4 +156,77 @@ func (r *cartGormRepository) GetCartByUserId(ctx context.Context, userID uuid.UU
 	}
 
 	return &cart, nil
+}
+
+func (r *cartGormRepository) RemoveProduct(ctx context.Context, userID uuid.UUID, productID uuid.UUID) error {
+	return r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		cart, err := r.getCartByUserIDWithDB(ctx, tx, userID)
+		if err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).
+			Where("cart_id = ? AND product_id = ?", cart.ID, productID).
+			Delete(&CartItem{}).Error; err != nil {
+			return except.ErrCartRemoveProduct
+		}
+
+		return r.recalculateTotalAmountWithDB(ctx, tx, cart.ID)
+	})
+}
+
+func (r *cartGormRepository) ClearCart(ctx context.Context, userID uuid.UUID) error {
+	return r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		cart, err := r.getCartByUserIDWithDB(ctx, tx, userID)
+		if err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).
+			Where("cart_id = ?", cart.ID).
+			Delete(&CartItem{}).Error; err != nil {
+			return except.ErrCartClear
+		}
+
+		if err := tx.WithContext(ctx).
+			Model(&Cart{}).
+			Where("id = ?", cart.ID).
+			Update("total_amount", 0).Error; err != nil {
+			return except.ErrCartClear
+		}
+
+		return nil
+	})
+}
+
+func (r *cartGormRepository) recalculateTotalAmountWithDB(ctx context.Context, db *gorm.DB, cartID uuid.UUID) error {
+	var total float64
+	if err := db.WithContext(ctx).
+		Model(&CartItem{}).
+		Where("cart_id = ?", cartID).
+		Select("COALESCE(SUM(total_price), 0)").
+		Scan(&total).Error; err != nil {
+		return except.ErrCartRecalculate
+	}
+
+	if err := db.WithContext(ctx).
+		Model(&Cart{}).
+		Where("id = ?", cartID).
+		Update("total_amount", total).Error; err != nil {
+		return except.ErrCartRecalculate
+	}
+
+	return nil
+}
+
+func (r *cartGormRepository) RecalculateTotalAmount(ctx context.Context, cartID uuid.UUID) error {
+	return r.recalculateTotalAmountWithDB(ctx, r.DB, cartID)
+}
+
+func (r *cartGormRepository) UpdateCartProduct(ctx context.Context, productID uuid.UUID, quantityDelta float64, unitPrice float64, cart *Cart) (bool, error) {
+	return r.updateCartProductWithDB(ctx, r.DB, productID, quantityDelta, unitPrice, cart)
+}
+
+func (r *cartGormRepository) GetCartByUserId(ctx context.Context, userID uuid.UUID) (*Cart, error) {
+	return r.getCartByUserIDWithDB(ctx, r.DB, userID)
 }
