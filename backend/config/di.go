@@ -48,6 +48,8 @@ import (
 	updateProduct "github.com/scrumno/scrumno-api/internal/cart/command/update-product-cart"
 	cart "github.com/scrumno/scrumno-api/internal/cart/entity"
 	getCart "github.com/scrumno/scrumno-api/internal/cart/query/get-cart-by-user-id"
+	"github.com/scrumno/scrumno-api/shared/services/snapshot"
+	fileStorage "github.com/scrumno/scrumno-api/shared/services/storage"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -59,8 +61,10 @@ func DI() (*action.Actions, *action.Listeners) {
 
 	var (
 		// service
-		orderProvider interfaces.OrderProvider
-		orderBuilder  interfaces.OrderBuilder
+		orderProvider   interfaces.OrderProvider
+		orderBuilder    interfaces.OrderBuilder
+		snapshotService interfaces.SnapshotService
+		snapshotStore   interfaces.SnapshotStore
 
 		menuProvider interfaces.MenuProvider
 
@@ -81,9 +85,11 @@ func DI() (*action.Actions, *action.Listeners) {
 
 		// services
 		menuProvider = iikoMenuService.NewMenuProvider(iikoCfg)
+		snapshotStore = fileStorage.NewFileStore(iikoCfg.SnapshotFilePath)
+		snapshotService = snapshot.NewSnapshotService(snapshotStore)
 
 		// handlers
-		getMenuHandler = refreshMenu.NewHandler(menuProvider, em)
+		getMenuHandler = refreshMenu.NewHandler(menuProvider, em, snapshotService)
 
 		// actions
 		refreshMenuAction = menu.NewRefreshMenuAction(getMenuHandler)
