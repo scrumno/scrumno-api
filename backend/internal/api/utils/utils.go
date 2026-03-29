@@ -13,7 +13,7 @@ func JSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		slog.Error("Error encoding response:", err.Error())
+		slog.Error("Ошибка кодирвоать JSON:", "error", err.Error())
 		return
 	}
 }
