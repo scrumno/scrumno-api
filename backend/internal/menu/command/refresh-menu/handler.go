@@ -1,7 +1,32 @@
 package refresh_menu
 
-type Handler struct{}
+import (
+	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
+	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
+)
 
-func NewHandler() *Handler {
-	return &Handler{}
+type Handler struct {
+	provider        interfaces.MenuProvider
+	eventManager    *eventManager.EventManager
+	snapshotService interfaces.SnapshotService
+}
+
+func NewHandler(provider interfaces.MenuProvider, eventManager *eventManager.EventManager, snapshotService interfaces.SnapshotService) *Handler {
+	return &Handler{
+		provider:        provider,
+		eventManager:    eventManager,
+		snapshotService: snapshotService,
+	}
+}
+
+func (h *Handler) Handle() any {
+	menu, err := h.provider.GetMenu()
+	if err != nil {
+		return err
+	}
+
+	if h.eventManager != nil {
+		h.eventManager.EmitEvent("menu.refreshed", menu)
+	}
+	return menu
 }

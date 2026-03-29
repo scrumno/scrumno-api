@@ -1,0 +1,51 @@
+{
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "info": {
+        "name": "/iiko API",
+        "description": "Сгенерированная коллекция API запросов для самовывоза",
+        "version": "",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "iiko",
+            "item": [
+                {
+                    "name": "refresh-menu",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/iiko/refresh-menu",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "iiko",
+                                "refresh-menu"
+                            ]
+                        },
+                        "method": "POST",
+                        "body": {
+                            "mode": ""
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "type": "string",
+            "value": "http://localhost:8087/api/v1"
+        }
+    ]
+}
