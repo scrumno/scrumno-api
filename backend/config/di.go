@@ -28,13 +28,20 @@ import (
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
 	refreshMenu "github.com/scrumno/scrumno-api/internal/menu/command/refresh-menu"
+	saveMenu "github.com/scrumno/scrumno-api/internal/menu/command/save-menu"
+	category "github.com/scrumno/scrumno-api/internal/menu/entity/category"
+	section "github.com/scrumno/scrumno-api/internal/menu/entity/section"
+
+	saveMenuListener "github.com/scrumno/scrumno-api/internal/menu/listener/save-menu"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
+	saveModifier "github.com/scrumno/scrumno-api/internal/products/command/save-modifier"
 	saveProductCommand "github.com/scrumno/scrumno-api/internal/products/command/save-product"
+	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
+	saveModifierListener "github.com/scrumno/scrumno-api/internal/products/listener/save-modifier"
 	saveProductListener "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
 	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
-	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
 	"github.com/scrumno/scrumno-api/shared/services/snapshot"
@@ -44,7 +51,7 @@ import (
 func DI() (*action.Actions, *action.Listeners) {
 	cfg := Load()
 
-	em := eventManager.New()
+	em := GetEventManager()
 
 	/* INTEGRATION SYSTEMs */
 
@@ -97,6 +104,9 @@ func DI() (*action.Actions, *action.Listeners) {
 	tokensRepo := authorizeTokens.NewTokensRepository(DB)
 	codesRepo := codes.NewSmsCodesRepository(DB)
 	productRepo := product.NewProductRepository(DB)
+	modifierRepo := modifier.NewModifierRepository(DB)
+	sectionRepo := section.NewSectionRepository(DB)
+	categoryRepo := category.NewCategoryRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		AccessSecret:    string(cfg.JWT.SecretKey),
@@ -123,6 +133,8 @@ func DI() (*action.Actions, *action.Listeners) {
 	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 
 	saveProductHandler := saveProductCommand.NewHandler(productRepo)
+	saveModifierHandler := saveModifier.NewHandler(modifierRepo)
+	saveMenuHandler := saveMenu.NewHandler(sectionRepo, categoryRepo)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
@@ -131,6 +143,8 @@ func DI() (*action.Actions, *action.Listeners) {
 
 	// listeners
 	saveProductListener := saveProductListener.NewListener(saveProductHandler)
+	saveModifierListener := saveModifierListener.NewListener(saveModifierHandler)
+	saveMenuListener := saveMenuListener.NewListener(saveMenuHandler)
 
 	return &action.Actions{
 			CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
@@ -154,6 +168,8 @@ func DI() (*action.Actions, *action.Listeners) {
 			RefreshMenu: &refreshMenuAction,
 		},
 		&action.Listeners{
-			SaveProduct: saveProductListener,
+			SaveProduct:  saveProductListener,
+			SaveModifier: saveModifierListener,
+			SaveMenu:     saveMenuListener,
 		}
 }

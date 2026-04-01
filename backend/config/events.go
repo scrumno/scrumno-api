@@ -14,6 +14,8 @@ func GetEventManager() *eventManager.EventManager {
 // TODO: ВАЖНО СОХРАНЯТЬ ПОРЯДОК ПОСЛЕДОВАТЕЛЬНОСТИ ДОБАВЛЕНИЯ СЛУШАТЕЛЕЙ
 func InitEventManager(em *eventManager.EventManager, listeners *action.Listeners) {
 
+	em.AddEventListener("menu.refreshed", listeners.SaveMenu.Listen)
+	em.AddEventListener("menu.refreshed", listeners.SaveModifier.Listen)
 	em.AddEventListener("menu.refreshed", listeners.SaveProduct.Listen)
 	em.Start()
 }
