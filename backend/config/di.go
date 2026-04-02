@@ -46,6 +46,10 @@ import (
 	"github.com/scrumno/scrumno-api/shared/services/sms"
 	"github.com/scrumno/scrumno-api/shared/services/snapshot"
 	fileStorage "github.com/scrumno/scrumno-api/shared/services/storage"
+
+	getCategories "github.com/scrumno/scrumno-api/internal/menu/query/get-categories"
+	getSections "github.com/scrumno/scrumno-api/internal/menu/query/get-sections"
+	getProducts "github.com/scrumno/scrumno-api/internal/products/query/get-products"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -141,6 +145,10 @@ func DI() (*action.Actions, *action.Listeners) {
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
+	getCategoriesFetcher := getCategories.NewFetcher(categoryRepo)
+	getSectionsFetcher := getSections.NewFetcher(sectionRepo)
+	getProductsFetcher := getProducts.NewFetcher(productRepo)
+
 	// listeners
 	saveProductListener := saveProductListener.NewListener(saveProductHandler)
 	saveModifierListener := saveModifierListener.NewListener(saveModifierHandler)
@@ -166,6 +174,7 @@ func DI() (*action.Actions, *action.Listeners) {
 
 			// общие экшены для всех интеграционных систем
 			RefreshMenu: &refreshMenuAction,
+			GetMenu:     menu.NewGetMenuAction(getCategoriesFetcher, getSectionsFetcher, getProductsFetcher),
 		},
 		&action.Listeners{
 			SaveProduct:  saveProductListener,

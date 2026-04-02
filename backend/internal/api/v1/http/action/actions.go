@@ -31,6 +31,8 @@ type Actions struct {
 	RefreshTokens *auth.RefreshTokensAction
 	Logout        *auth.LogoutAction
 
+	GetMenu *menuAction.GetMenuAction
+
 	JWTManager *jwt.Manager
 
 	SmsCode *auth.AuthCodeAction

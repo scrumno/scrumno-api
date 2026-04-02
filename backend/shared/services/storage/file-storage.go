@@ -3,6 +3,7 @@ package file_storage
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -18,6 +19,10 @@ type FileStore struct {
 }
 
 func NewFileStore(filePath string) *FileStore {
+	if filePath == "" {
+		filePath = filepath.Join("upload", "snapshots", "_hashes.json")
+	}
+
 	return &FileStore{
 		filePath: filePath,
 	}
@@ -72,6 +77,10 @@ func (s *FileStore) Set(key string, hash string) error {
 
 	data, err := json.MarshalIndent(snapshots, "", "  ")
 	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(s.filePath), 0o755); err != nil {
 		return err
 	}
 

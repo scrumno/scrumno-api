@@ -17,7 +17,15 @@ func NewHandler(modifierRepo modifier.ModifierRepository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd Command) error {
+	seenGroups := make(map[string]struct{}, len(cmd.Groups))
 	for _, group := range cmd.Groups {
+		if group.ID == "" {
+			continue
+		}
+		if _, ok := seenGroups[group.ID]; ok {
+			continue
+		}
+		seenGroups[group.ID] = struct{}{}
 		if err := h.modifierRepo.SaveProductModifierGroup(ctx, &modifier.ProductModifierGroup{
 			ID:        group.ID,
 			MinAmount: group.MinAmount,
@@ -27,7 +35,15 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		}
 	}
 
+	seenChild := make(map[string]struct{}, len(cmd.ChildModifiers))
 	for _, childModifier := range cmd.ChildModifiers {
+		if childModifier.ID == "" {
+			continue
+		}
+		if _, ok := seenChild[childModifier.ID]; ok {
+			continue
+		}
+		seenChild[childModifier.ID] = struct{}{}
 		if err := h.modifierRepo.SaveProductChildModifier(ctx, &modifier.ProductChildModifier{
 			ID:            childModifier.ID,
 			DefaultAmount: childModifier.DefaultAmount,
@@ -38,7 +54,15 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		}
 	}
 
+	seenModifiers := make(map[string]struct{}, len(cmd.Modifiers))
 	for _, m := range cmd.Modifiers {
+		if m.ID == "" {
+			continue
+		}
+		if _, ok := seenModifiers[m.ID]; ok {
+			continue
+		}
+		seenModifiers[m.ID] = struct{}{}
 		if err := h.modifierRepo.SaveProductModifier(ctx, &modifier.ProductModifier{
 			ID:                  m.ID,
 			DefaultAmount:       m.DefaultAmount,

@@ -1,7 +1,7 @@
 package modifier
 
 type ProductModifier struct {
-	ID                  string `json:"id"`
+	ID                  string `json:"id" gorm:"primaryKey;size:128"`
 	DefaultAmount       *int32 `json:"defaultAmount"`
 	MinAmount           int32  `json:"minAmount"`
 	MaxAmount           int32  `json:"maxAmount"`
@@ -12,7 +12,7 @@ type ProductModifier struct {
 }
 
 type ProductChildModifier struct {
-	ID                  string `json:"id"`
+	ID                  string `json:"id" gorm:"primaryKey;size:128"`
 	DefaultAmount       *int32 `json:"defaultAmount"`
 	MinAmount           int32  `json:"minAmount"`
 	MaxAmount           int32  `json:"maxAmount"`

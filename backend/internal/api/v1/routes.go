@@ -112,6 +112,18 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"/update-user-profile",
 	)
 
+	menuPrefix := "/menu"
+	menu := api.PathPrefix(menuPrefix).Subrouter()
+
+	collectorRoutes.HandleFuncWithPostman(
+		menu,
+		menuPrefix,
+		actions.GetMenu.Action,
+		actions.GetMenu.GetInputType(),
+		"GET",
+		"/get-menu",
+	)
+
 	// INTEGRATION SYSTEMs
 	ordersPrefix := "/orders"
 	orders := api.PathPrefix(ordersPrefix).Subrouter()
