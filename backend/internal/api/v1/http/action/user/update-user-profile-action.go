@@ -3,6 +3,7 @@ package user
 import (
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/scrumno/scrumno-api/internal/api/utils"
@@ -52,13 +53,17 @@ func (a *UpdateUserProfileAction) Action(w http.ResponseWriter, r *http.Request)
 		BirthDate: nil,
 	}
 
-	parsed, err := time.Parse("21.03.2026", *req.BirthDate)
-	if err != nil {
-		a.jsonError(w, "Некорректный формат даты рождения", http.StatusBadRequest)
-		return
+	if req.BirthDate != nil {
+		raw := strings.TrimSpace(*req.BirthDate)
+		if raw != "" {
+			parsed, err := time.Parse("02.01.2006", raw)
+			if err != nil {
+				a.jsonError(w, "Некорректный формат даты рождения", http.StatusBadRequest)
+				return
+			}
+			cmd.BirthDate = &parsed
+		}
 	}
-
-	cmd.BirthDate = &parsed
 
 	if err := a.Handler.Handle(r.Context(), cmd); err != nil {
 		a.jsonError(w, err.Error(), http.StatusBadRequest)

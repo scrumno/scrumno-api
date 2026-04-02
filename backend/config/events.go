@@ -1,8 +1,7 @@
 package config
 
 import (
-	refreshMenuCmd "github.com/scrumno/scrumno-api/internal/menu/command/refresh-menu"
-	refreshMenuListener "github.com/scrumno/scrumno-api/internal/menu/listener/refresh-menu"
+	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 )
 
@@ -12,14 +11,13 @@ func GetEventManager() *eventManager.EventManager {
 	return em
 }
 
-func InitEventManager(em *eventManager.EventManager) {
+// TODO: ВАЖНО СОХРАНЯТЬ ПОРЯДОК ПОСЛЕДОВАТЕЛЬНОСТИ ДОБАВЛЕНИЯ СЛУШАТЕЛЕЙ
+func InitEventManager(em *eventManager.EventManager, listeners *action.Listeners) {
 
-	RefreshMenuHandler := refreshMenuCmd.NewHandler()
-	RefreshMenuListener := refreshMenuListener.NewListener(RefreshMenuHandler)
-
-	em.AddEventListener("menu.refresh", RefreshMenuListener.Listen)
+	em.AddEventListener("menu.refreshed", listeners.SaveMenu.Listen)
+	em.AddEventListener("menu.refreshed", listeners.SaveModifier.Listen)
+	em.AddEventListener("menu.refreshed", listeners.SaveProduct.Listen)
 	em.Start()
 }
 
-type RefreshMenuEventPayload struct {
-}
+type RefreshMenuEventPayload struct{}

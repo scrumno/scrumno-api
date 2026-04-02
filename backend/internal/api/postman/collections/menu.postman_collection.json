@@ -1,0 +1,63 @@
+{
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "info": {
+        "name": "/menu API",
+        "description": "Сгенерированная коллекция API запросов для самовывоза",
+        "version": "",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "menu",
+            "item": [
+                {
+                    "name": "get-menu",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/menu/get-menu",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "menu",
+                                "get-menu"
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"limit\": \"10\",\n  \"offset\": \"0\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "type": "string",
+            "value": "http://localhost:8087/api/v1"
+        }
+    ]
+}

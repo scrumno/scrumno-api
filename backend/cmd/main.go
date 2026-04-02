@@ -10,21 +10,22 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
+	user "github.com/scrumno/scrumno-api/internal/authorize/entity"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
-	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
-	"github.com/scrumno/scrumno-api/internal/users/entity/user"
 	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
+	category "github.com/scrumno/scrumno-api/internal/menu/entity/category"
+	section "github.com/scrumno/scrumno-api/internal/menu/entity/section"
+	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
+	"github.com/scrumno/scrumno-api/internal/products/entity/product"
+	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 )
 
 func main() {
-	_ = godotenv.Load(".env.local")
-	_ = godotenv.Load(".env")
-	_ = godotenv.Load("backend/.env.local")
-	_ = godotenv.Load("backend/.env")
+	_ = godotenv.Overload(".env")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelError + 100,
+		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
 
@@ -43,6 +44,12 @@ func main() {
 		&staffRole.StaffRole{},
 		&codes.AuthorizeCode{},
 		&authorizeTokens.AuthorizeToken{},
+		&product.Product{},
+		&modifier.ProductModifier{},
+		&modifier.ProductChildModifier{},
+		&modifier.ProductModifierGroup{},
+		&section.Section{},
+		&category.Category{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)
@@ -55,7 +62,11 @@ func main() {
 		}
 	}()
 
-	actions := config.DI(cfg)
+	actions, listeners := config.DI()
+
+	// Стартуем EventManager и регистрируем listeners один раз при запуске основного приложения.
+	em := config.GetEventManager()
+	config.InitEventManager(em, listeners)
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port

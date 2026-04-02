@@ -20,11 +20,9 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	api := router.PathPrefix("/api/v1").Subrouter()
 
 	healthPrefix := "/health"
-
 	health := api.PathPrefix(healthPrefix).Subrouter()
 
 	collectorRoutes := collector.NewEndpointCollector()
-
 	if actions.JWTManager != nil {
 		health.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
 	}
@@ -55,9 +53,7 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	}
 
 	authPrefix := "/auth"
-
 	auth := api.PathPrefix(authPrefix).Subrouter()
-
 	collectorRoutes.HandleFuncWithPostman(
 		auth,
 		authPrefix,
@@ -111,11 +107,81 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"PUT",
 		"/update-user-profile",
 	)
-	
+
+	cartPrefix := "/cart"
+	cartRouter := api.PathPrefix(cartPrefix).Subrouter()
+	if actions.JWTManager != nil {
+		cartRouter.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
+	}
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.CreateCart.Action,
+		actions.CreateCart.GetInputType(),
+		"POST",
+		"/create",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.AddProductToCart.Action,
+		actions.AddProductToCart.GetInputType(),
+		"POST",
+		"/add-product",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.RemoveProductFromCart.Action,
+		actions.RemoveProductFromCart.GetInputType(),
+		"POST",
+		"/remove-product",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.UpdateProductFromCart.Action,
+		actions.UpdateProductFromCart.GetInputType(),
+		"PUT",
+		"/update-product",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.ClearCart.Action,
+		actions.ClearCart.GetInputType(),
+		"POST",
+		"/clear-cart",
+	)
+
+	collectorRoutes.HandleFuncWithPostman(
+		cartRouter,
+		cartPrefix,
+		actions.GetCart.Action,
+		actions.GetCart.GetInputType(),
+		"GET",
+		"",
+	)
+
+	menuPrefix := "/menu"
+	menu := api.PathPrefix(menuPrefix).Subrouter()
+	collectorRoutes.HandleFuncWithPostman(
+		menu,
+		menuPrefix,
+		actions.GetMenu.Action,
+		actions.GetMenu.GetInputType(),
+		"GET",
+		"/get-menu",
+	)
+
 	// INTEGRATION SYSTEMs
 	ordersPrefix := "/orders"
 	orders := api.PathPrefix(ordersPrefix).Subrouter()
-
 	collectorRoutes.HandleFuncWithPostman(
 		orders,
 		ordersPrefix,
@@ -124,6 +190,21 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"POST",
 		"/create-order",
 	)
+
+	// iiko integration endpoints
+	iikoPrefix := "/iiko"
+	iiko := api.PathPrefix(iikoPrefix).Subrouter()
+
+	if actions.RefreshMenu != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			iiko,
+			iikoPrefix,
+			actions.RefreshMenu.Action,
+			actions.RefreshMenu.GetInputType(),
+			"POST",
+			"/refresh-menu",
+		)
+	}
 	// INTEGRATION SYSTEMs END
 
 	err := collectorRoutes.GeneratePostmanCollections()
