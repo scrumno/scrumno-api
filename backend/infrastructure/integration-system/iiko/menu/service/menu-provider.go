@@ -97,7 +97,7 @@ func (p *MenuProvider) GetMenu() (any, error) {
 	url := fmt.Sprintf("%s/api/1/nomenclature", base)
 
 	requestBody, err := json.Marshal(map[string]string{
-		"organizationId":  p.config.OrganizationID,
+		"organizationId":  p.config.OrganizationID.String(),
 		"terminalGroupId": p.config.TerminalGroupID,
 	})
 	if err != nil {

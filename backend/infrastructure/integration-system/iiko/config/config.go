@@ -1,14 +1,18 @@
 package config
 
-import "os"
+import (
+	"os"
+
+	"github.com/google/uuid"
+)
 
 type Config struct {
-	BaseURL          string `env:"IIKO_BASE_URL"`
-	Login            string `env:"IIKO_LOGIN"`
-	AccessToken      string `env:"IIKO_ACCESS_TOKEN"`
-	OrganizationID   string `env:"IIKO_ORGANIZATION_ID"`
-	TerminalGroupID  string `env:"IIKO_TERMINAL_GROUP_ID"`
-	SnapshotFilePath string `env:"IIKO_SNAPSHOT_FILE_PATH"`
+	BaseURL          string    `env:"IIKO_BASE_URL"`
+	Login            string    `env:"IIKO_LOGIN"`
+	AccessToken      string    `env:"IIKO_ACCESS_TOKEN"`
+	OrganizationID   uuid.UUID `env:"IIKO_ORGANIZATION_ID"`
+	TerminalGroupID  string    `env:"IIKO_TERMINAL_GROUP_ID"`
+	SnapshotFilePath string    `env:"IIKO_SNAPSHOT_FILE_PATH"`
 }
 
 func Load() *Config {
@@ -16,7 +20,7 @@ func Load() *Config {
 		BaseURL:          os.Getenv("IIKO_BASE_URL"),
 		Login:            os.Getenv("IIKO_LOGIN"),
 		AccessToken:      os.Getenv("IIKO_ACCESS_TOKEN"),
-		OrganizationID:   os.Getenv("IIKO_ORGANIZATION_ID"),
+		OrganizationID:   uuid.MustParse(os.Getenv("IIKO_ORGANIZATION_ID")),
 		TerminalGroupID:  os.Getenv("IIKO_TERMINAL_GROUP_ID"),
 		SnapshotFilePath: os.Getenv("IIKO_SNAPSHOT_FILE_PATH"),
 	}
