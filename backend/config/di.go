@@ -50,6 +50,9 @@ import (
 	getCart "github.com/scrumno/scrumno-api/internal/cart/query/get-cart-by-user-id"
 	"github.com/scrumno/scrumno-api/shared/services/snapshot"
 	fileStorage "github.com/scrumno/scrumno-api/shared/services/storage"
+
+	// Customer
+	customer "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/customer/service"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
@@ -65,6 +68,11 @@ func DI() (*action.Actions, *action.Listeners) {
 		orderBuilder    interfaces.OrderBuilder
 		snapshotService interfaces.SnapshotService
 		snapshotStore   interfaces.SnapshotStore
+
+		//customer
+		cBuilder  interfaces.CustomerBodyBuilder
+		cProvider interfaces.CustomerProvider
+		cSync     interfaces.CustomerSyncService
 
 		menuProvider interfaces.MenuProvider
 
@@ -87,6 +95,11 @@ func DI() (*action.Actions, *action.Listeners) {
 		menuProvider = iikoMenuService.NewMenuProvider(iikoCfg)
 		snapshotStore = fileStorage.NewFileStore(iikoCfg.SnapshotFilePath)
 		snapshotService = snapshot.NewSnapshotService(snapshotStore)
+
+		//customer
+		cBuilder = customer.NewCustomerBodyBuilder(iikoCfg)
+		cProvider = customer.NewCustomerProvider(iikoCfg)
+		cSync = customer.NewCustomerSyncService(cBuilder, cProvider)
 
 		// handlers
 		getMenuHandler = refreshMenu.NewHandler(menuProvider, em, snapshotService)
@@ -128,7 +141,7 @@ func DI() (*action.Actions, *action.Listeners) {
 	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsProfilePolicy)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOntimeCodeHandler := checkOntimeCode.NewHandler(codesRepo)
-	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo)
+	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo, cSync)
 	createAuthorizeTokensHandler := createAuthorizeTokens.NewHandler(tokensRepo, jwtManager)
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
