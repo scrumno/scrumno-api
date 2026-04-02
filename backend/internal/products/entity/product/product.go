@@ -1,7 +1,9 @@
 package product
 
 type Product struct {
-	ID uint `gorm:"primaryKey;autoIncrement"`
+	ID uint `json:"id" gorm:"primaryKey;autoIncrement"`
+
+	ExternalID string `json:"externalId" gorm:"size:128;uniqueIndex"`
 
 	FatAmount               *float64    `json:"fatAmount" gorm:"type:numeric(10,3)"`
 	ProteinsAmount          *float64    `json:"proteinsAmount" gorm:"type:numeric(10,3)"`

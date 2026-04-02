@@ -14,6 +14,9 @@ import (
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
+	category "github.com/scrumno/scrumno-api/internal/menu/entity/category"
+	section "github.com/scrumno/scrumno-api/internal/menu/entity/section"
+	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 )
@@ -42,6 +45,11 @@ func main() {
 		&codes.AuthorizeCode{},
 		&authorizeTokens.AuthorizeToken{},
 		&product.Product{},
+		&modifier.ProductModifier{},
+		&modifier.ProductChildModifier{},
+		&modifier.ProductModifierGroup{},
+		&section.Section{},
+		&category.Category{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)
@@ -59,7 +67,6 @@ func main() {
 	// Стартуем EventManager и регистрируем listeners один раз при запуске основного приложения.
 	em := config.GetEventManager()
 	config.InitEventManager(em, listeners)
-	em.Start()
 
 	router := v1.SetupRouter(cfg, actions)
 	addr := ":" + cfg.Server.Port

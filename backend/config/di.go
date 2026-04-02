@@ -30,13 +30,20 @@ import (
 	"github.com/scrumno/scrumno-api/internal/health/entity/status"
 	checkStatusConnectDb "github.com/scrumno/scrumno-api/internal/health/query/check-status-connect-db"
 	refreshMenu "github.com/scrumno/scrumno-api/internal/menu/command/refresh-menu"
+	saveMenu "github.com/scrumno/scrumno-api/internal/menu/command/save-menu"
+	category "github.com/scrumno/scrumno-api/internal/menu/entity/category"
+	section "github.com/scrumno/scrumno-api/internal/menu/entity/section"
+
+	saveMenuListener "github.com/scrumno/scrumno-api/internal/menu/listener/save-menu"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
+	saveModifier "github.com/scrumno/scrumno-api/internal/products/command/save-modifier"
 	saveProductCommand "github.com/scrumno/scrumno-api/internal/products/command/save-product"
+	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
+	saveModifierListener "github.com/scrumno/scrumno-api/internal/products/listener/save-modifier"
 	saveProductListener "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
 	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
-	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 	"github.com/scrumno/scrumno-api/shared/services/sms"
 
@@ -53,12 +60,15 @@ import (
 
 	// Customer
 	customer "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/customer/service"
+	getCategories "github.com/scrumno/scrumno-api/internal/menu/query/get-categories"
+	getSections "github.com/scrumno/scrumno-api/internal/menu/query/get-sections"
+	getProducts "github.com/scrumno/scrumno-api/internal/products/query/get-products"
 )
 
 func DI() (*action.Actions, *action.Listeners) {
 	cfg := Load()
 
-	em := eventManager.New()
+	em := GetEventManager()
 
 	/* INTEGRATION SYSTEMs */
 
@@ -122,6 +132,9 @@ func DI() (*action.Actions, *action.Listeners) {
 	codesRepo := codes.NewSmsCodesRepository(DB)
 	productRepo := product.NewProductRepository(DB)
 	cartRepo := cart.NewCartRepository(DB)
+	modifierRepo := modifier.NewModifierRepository(DB)
+	sectionRepo := section.NewSectionRepository(DB)
+	categoryRepo := category.NewCategoryRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		AccessSecret:    string(cfg.JWT.SecretKey),
@@ -156,14 +169,22 @@ func DI() (*action.Actions, *action.Listeners) {
 	updateProductHandler := updateProduct.NewHandler(cartRepo)
 	getCartFetcher := getCart.NewFetcher(cartRepo)
 
+	saveModifierHandler := saveModifier.NewHandler(modifierRepo)
+	saveMenuHandler := saveMenu.NewHandler(sectionRepo, categoryRepo)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
 
+	getCategoriesFetcher := getCategories.NewFetcher(categoryRepo)
+	getSectionsFetcher := getSections.NewFetcher(sectionRepo)
+	getProductsFetcher := getProducts.NewFetcher(productRepo)
+
 	// listeners
 	saveProductListener := saveProductListener.NewListener(saveProductHandler)
+	saveModifierListener := saveModifierListener.NewListener(saveModifierHandler)
+	saveMenuListener := saveMenuListener.NewListener(saveMenuHandler)
 
 	return &action.Actions{
 			CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
@@ -194,8 +215,11 @@ func DI() (*action.Actions, *action.Listeners) {
 
 			// общие экшены для всех интеграционных систем
 			RefreshMenu: &refreshMenuAction,
+			GetMenu:     menu.NewGetMenuAction(getCategoriesFetcher, getSectionsFetcher, getProductsFetcher),
 		},
 		&action.Listeners{
-			SaveProduct: saveProductListener,
+			SaveProduct:  saveProductListener,
+			SaveModifier: saveModifierListener,
+			SaveMenu:     saveMenuListener,
 		}
 }

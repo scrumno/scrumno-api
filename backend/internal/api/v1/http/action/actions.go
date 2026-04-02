@@ -8,6 +8,8 @@ import (
 	menuAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
+	saveMenu "github.com/scrumno/scrumno-api/internal/menu/listener/save-menu"
+	saveModifier "github.com/scrumno/scrumno-api/internal/products/listener/save-modifier"
 	saveProduct "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
 )
@@ -39,11 +41,15 @@ type Actions struct {
 	RefreshTokens *auth.RefreshTokensAction
 	Logout        *auth.LogoutAction
 
+	GetMenu *menuAction.GetMenuAction
+
 	JWTManager *jwt.Manager
 
 	SmsCode *auth.AuthCodeAction
 }
 
 type Listeners struct {
-	SaveProduct *saveProduct.Listener
+	SaveProduct  *saveProduct.Listener
+	SaveModifier *saveModifier.Listener
+	SaveMenu     *saveMenu.Listener
 }

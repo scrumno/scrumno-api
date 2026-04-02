@@ -20,11 +20,9 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	api := router.PathPrefix("/api/v1").Subrouter()
 
 	healthPrefix := "/health"
-
 	health := api.PathPrefix(healthPrefix).Subrouter()
 
 	collectorRoutes := collector.NewEndpointCollector()
-
 	if actions.JWTManager != nil {
 		health.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
 	}
@@ -55,9 +53,7 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 	}
 
 	authPrefix := "/auth"
-
 	auth := api.PathPrefix(authPrefix).Subrouter()
-
 	collectorRoutes.HandleFuncWithPostman(
 		auth,
 		authPrefix,
@@ -114,7 +110,6 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 
 	cartPrefix := "/cart"
 	cartRouter := api.PathPrefix(cartPrefix).Subrouter()
-
 	if actions.JWTManager != nil {
 		cartRouter.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
 	}
@@ -173,10 +168,20 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"",
 	)
 
+	menuPrefix := "/menu"
+	menu := api.PathPrefix(menuPrefix).Subrouter()
+	collectorRoutes.HandleFuncWithPostman(
+		menu,
+		menuPrefix,
+		actions.GetMenu.Action,
+		actions.GetMenu.GetInputType(),
+		"GET",
+		"/get-menu",
+	)
+
 	// INTEGRATION SYSTEMs
 	ordersPrefix := "/orders"
 	orders := api.PathPrefix(ordersPrefix).Subrouter()
-
 	collectorRoutes.HandleFuncWithPostman(
 		orders,
 		ordersPrefix,

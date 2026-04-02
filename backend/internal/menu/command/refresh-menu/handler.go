@@ -1,6 +1,9 @@
 package refresh_menu
 
 import (
+	"log/slog"
+
+	payloadMenuModel "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/menu/model"
 	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	eventManager "github.com/scrumno/scrumno-api/shared/services/event-manager"
 )
@@ -25,8 +28,28 @@ func (h *Handler) Handle() any {
 		return err
 	}
 
-	if h.eventManager != nil {
+	const cmdName = "refresh-menu"
+
+	changed := true
+	menuForHash := menu
+	if v, ok := menu.(payloadMenuModel.RefreshMenuSuccessPayload); ok {
+		v.CorrelationID = ""
+		menuForHash = v
+	}
+
+	isChanged, err := h.snapshotService.CheckAndSaveWithUploads(cmdName, menuForHash)
+	if err != nil {
+		// Если не удалось сравнить/сохранить снапшот, чтобы не "пропустить" обновления,
+		// считаем, что меню могло измениться.
+		slog.Error("refresh-menu: failed to save snapshot/photos", "error", err)
+	} else {
+		changed = isChanged
+		slog.Info("refresh-menu: menu changed", "changed", changed)
+	}
+
+	if changed && h.eventManager != nil {
 		h.eventManager.EmitEvent("menu.refreshed", menu)
 	}
+
 	return menu
 }

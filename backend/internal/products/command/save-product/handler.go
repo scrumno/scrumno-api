@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
@@ -17,8 +18,18 @@ func NewHandler(productRepo product.ProductRepository) *Handler {
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd Command) error {
+	seen := make(map[string]struct{}, len(cmd.Products))
 	for _, incomingProduct := range cmd.Products {
+		if incomingProduct.ID == "" {
+			continue
+		}
+		if _, ok := seen[incomingProduct.ID]; ok {
+			continue
+		}
+		seen[incomingProduct.ID] = struct{}{}
+
 		entity := product.Product{
+			ExternalID:              incomingProduct.ID,
 			FatAmount:               incomingProduct.FatAmount,
 			ProteinsAmount:          incomingProduct.ProteinsAmount,
 			CarbohydratesAmount:     incomingProduct.CarbohydratesAmount,
@@ -60,6 +71,12 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 					NextDatePrice:      nextDatePrice,
 				},
 			})
+		}
+
+		if existing, err := h.productRepo.FindByExternalID(ctx, incomingProduct.ID); err == nil && existing != nil {
+			entity.ID = existing.ID
+		} else if err != nil && err != gorm.ErrRecordNotFound {
+			return err
 		}
 
 		if _, err := h.productRepo.Save(ctx, &entity); err != nil {
