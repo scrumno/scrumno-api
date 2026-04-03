@@ -28,10 +28,11 @@ func (s *CustomerSyncService) Sync(ctx context.Context, u *user.User) error {
 	return nil
 }
 
-func (s *CustomerSyncService) SyncGet(ctx context.Context, u *user.User) error {
-	body := s.builder.BuildGet(ctx, u)
-	if _, err := s.provider.GetCustomer(ctx, body); err != nil {
-		return fmt.Errorf("Получение пользователя с IIKO, : %w", err)
+func (s *CustomerSyncService) SyncGet(ctx context.Context, phone string) (any, error) {
+	body := s.builder.BuildGet(ctx, phone)
+	resp, err := s.provider.GetCustomer(ctx, body)
+	if err != nil {
+		return nil, fmt.Errorf("Получение пользователя с IIKO, : %w", err)
 	}
-	return nil
+	return resp, nil
 }

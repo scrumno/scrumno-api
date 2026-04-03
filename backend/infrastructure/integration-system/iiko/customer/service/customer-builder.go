@@ -66,11 +66,10 @@ type BuilderSetCommand struct {
 	OrganizationId                uuid.UUID          `json:"organizationId"`
 }
 
-func (h *CustomerBodyBuilder) BuildGet(ctx context.Context, u *user.User) any {
-
-	if u.Phone != "" {
+func (h *CustomerBodyBuilder) BuildGet(ctx context.Context, phone string) any {
+	if phone != "" {
 		return &BuilderCommand{
-			SearchValue:    u.Phone,
+			SearchValue:    phone,
 			Type:           Phone,
 			OrganizationId: h.config.OrganizationID,
 		}
@@ -88,22 +87,20 @@ func (h *CustomerBodyBuilder) BuildSetFromUser(ctx context.Context, u *user.User
 	isDeleted := false
 	loyaltyInfo := false
 	promoInfo := false
-	sex := SexMale
-	consent := ConsentUnknown
+	consent := ConsentGiven
 
 	cmd := &BuilderSetCommand{
 		OrganizationId:                h.config.OrganizationID,
 		Phone:                         &u.Phone,
 		Name:                          name,
 		Email:                         u.Email,
-		Sex:                           &sex,
 		ConsentStatus:                 &consent,
 		ShouldReceiveLoyaltyInfo:      &loyaltyInfo,
 		ShouldReceivePromoActionsInfo: &promoInfo,
 		IsDeleted:                     &isDeleted,
 	}
 	if u.BirthDate != nil {
-		birthday := u.BirthDate.Format("2006-01-02")
+		birthday := u.BirthDate.Format("2006-01-02T15:04:05")
 		cmd.Birthday = &birthday
 	}
 
