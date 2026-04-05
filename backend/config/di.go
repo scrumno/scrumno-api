@@ -151,7 +151,7 @@ func DI() (*action.Actions, *action.Listeners) {
 
 	// command
 	conditionsProfilePolicy := conditionsUpdateProfilePolicy.NewHandler()
-	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsProfilePolicy)
+	updateUserProfileHandler := updateUserProfile.NewHandler(registrationRepo, conditionsProfilePolicy, cSync)
 	logoutHandler := logout.NewHandler(tokensRepo)
 	checkOntimeCodeHandler := checkOntimeCode.NewHandler(codesRepo)
 	createUserAuthHandler := createUserAuth.NewHandler(registrationRepo, cSync)

@@ -20,22 +20,23 @@ func NewHandler(userRepo user.RegistrationRepository, customerSync interfaces.Cu
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd Command) (*user.User, error) {
-	user := user.NewUser(cmd.Phone)
+	u := user.NewUser(cmd.Phone)
 
 	if h.customerSync != nil {
-		outerUser := h.customerSync.SyncGet(ctx, user)
-
-		if outerUser == nil {
-			if err := h.customerSync.Sync(ctx, user); err != nil {
+		exists, err := h.customerSync.SyncGet(ctx, cmd.Phone)
+		if err != nil {
+			return nil, err
+		}
+		if exists == nil {
+			if err := h.customerSync.Sync(ctx, u); err != nil {
 				return nil, err
 			}
 		}
-
 	}
 
-	if err := h.userRepo.Create(ctx, user); err != nil {
+	if err := h.userRepo.Create(ctx, u); err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return u, nil
 }

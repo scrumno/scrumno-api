@@ -12,11 +12,11 @@ type CustomerProvider interface {
 }
 
 type CustomerBodyBuilder interface {
-	BuildGet(ctx context.Context, u *user.User) any
+	BuildGet(ctx context.Context, phone string) any
 	BuildSetFromUser(ctx context.Context, u *user.User) any
 }
 
 type CustomerSyncService interface {
 	Sync(ctx context.Context, u *user.User) error
-	SyncGet(ctx context.Context, u *user.User) error
+	SyncGet(ctx context.Context, phone string) (any, error)
 }

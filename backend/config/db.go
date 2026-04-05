@@ -58,38 +58,8 @@ func Connect(cfg *Config) error {
 	return nil
 }
 
-// migrateUsersPhone adds NOT NULL column "phone" to "users" when the table
-// already has rows. Existing rows get a unique placeholder so the constraint holds.
-func migrateUsersPhone() error {
-	var exists bool
-	err := DB.Raw(
-		`SELECT EXISTS (
-			SELECT 1 FROM information_schema.columns
-			WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'phone'
-		)`).Scan(&exists).Error
-	if err != nil || exists {
-		return err
-	}
-	// Add column with unique default so existing rows satisfy NOT NULL and unique index
-	if err := DB.Exec(`ALTER TABLE users ADD COLUMN phone text NOT NULL DEFAULT gen_random_uuid()::text`).Error; err != nil {
-		return err
-	}
-	if err := DB.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone)`).Error; err != nil {
-		return err
-	}
-	if err := DB.Exec(`ALTER TABLE users ALTER COLUMN phone DROP DEFAULT`).Error; err != nil {
-		return err
-	}
-	slog.Info("Миграция users.phone выполнена (существующие строки получили placeholder)")
-	return nil
-}
-
 func Migrate(models ...interface{}) error {
 	slog.Info("Миграция базы данных")
-
-	if err := migrateUsersPhone(); err != nil {
-		return err
-	}
 
 	if err := DB.AutoMigrate(models...); err != nil {
 		return err
