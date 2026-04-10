@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -71,7 +70,7 @@ func (p *CustomerProvider) SetCustomer(ctx context.Context, builderBody any) (an
 	if err != nil {
 		return nil, err
 	}
-	slog.Info("iiko SetCustomer response", "raw", string(resp))
+
 	if len(resp) == 0 {
 		return nil, nil
 	}

@@ -1,9 +1,19 @@
 package interfaces
 
+import (
+	"context"
+
+	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/model/order"
+)
+
 type OrderProvider interface {
-	Create(order any) (any, error)
+	SetOrder(ctx context.Context, builderBody any) (any, error)
 }
 
-type OrderBuilder interface {
-	BuildBody(data any) any
+type OrderBodyBuilder interface {
+	BuildSetFromOrder(ctx context.Context, input *order.BuildInput) any
+}
+
+type OrderSyncService interface {
+	Sync(ctx context.Context, input *order.BuildInput) (*order.ResponseSet, error)
 }

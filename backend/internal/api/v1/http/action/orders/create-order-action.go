@@ -21,16 +21,8 @@ func NewCreateOrderAction(
 }
 
 func (a *CreateOrderAction) Action(w http.ResponseWriter, r *http.Request) {
-	if r.Body == nil {
-		utils.JSONResponse(w, CreateOrderResponse{
-			IsSuccess: false,
-			Error:     "body is empty",
-		}, http.StatusBadRequest)
-		return
-	}
-
-	err := utils.CheckRequiredFieldsInBody(r.Body, []string{"phone", "code"})
-	if err != nil {
+	var req CreateOrderRequest
+	if err := utils.DecodeJSONBody(r, &req); err != nil {
 		utils.JSONResponse(w, CreateOrderResponse{
 			IsSuccess: false,
 			Error:     err.Error(),
@@ -38,9 +30,7 @@ func (a *CreateOrderAction) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var cmd createOrder.Command = createOrder.Command{}
-
-	res := a.Handler.Handle(r.Context(), cmd)
+	res := a.Handler.Handle(r.Context(), req.CustomerPhone, &req.Comment)
 	if !res.IsSuccess {
 		utils.JSONResponse(w, CreateOrderResponse{
 			IsSuccess: false,
@@ -55,7 +45,10 @@ func (a *CreateOrderAction) Action(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
-type CreateOrderRequest struct{}
+type CreateOrderRequest struct {
+	CustomerPhone string `json:"phone" example:"79999009999"`
+	Comment       string `json:"comment" example:"Комментарий"`
+}
 
 type CreateOrderResponse struct {
 	IsSuccess bool   `json:"isSuccess"`

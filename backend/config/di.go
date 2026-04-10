@@ -60,6 +60,7 @@ import (
 
 	// Customer
 	customer "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/customer/service"
+	order "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/order-delivery/service"
 	getCategories "github.com/scrumno/scrumno-api/internal/menu/query/get-categories"
 	getSections "github.com/scrumno/scrumno-api/internal/menu/query/get-sections"
 	getProducts "github.com/scrumno/scrumno-api/internal/products/query/get-products"
@@ -75,7 +76,7 @@ func DI() (*action.Actions, *action.Listeners) {
 	var (
 		// service
 		orderProvider   interfaces.OrderProvider
-		orderBuilder    interfaces.OrderBuilder
+		orderBuilder    interfaces.OrderBodyBuilder
 		snapshotService interfaces.SnapshotService
 		snapshotStore   interfaces.SnapshotStore
 
@@ -110,6 +111,10 @@ func DI() (*action.Actions, *action.Listeners) {
 		cBuilder = customer.NewCustomerBodyBuilder(iikoCfg)
 		cProvider = customer.NewCustomerProvider(iikoCfg)
 		cSync = customer.NewCustomerSyncService(cBuilder, cProvider)
+
+		//order
+		orderBuilder = order.NewOrderBodyBuilder(iikoCfg)
+		orderProvider = order.NewOrderProvider(iikoCfg)
 
 		// handlers
 		getMenuHandler = refreshMenu.NewHandler(menuProvider, em, snapshotService)
@@ -158,7 +163,7 @@ func DI() (*action.Actions, *action.Listeners) {
 	createAuthorizeTokensHandler := createAuthorizeTokens.NewHandler(tokensRepo, jwtManager)
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
-	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
+	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder, registrationRepo, cartRepo)
 
 	saveProductHandler := saveProductCommand.NewHandler(productRepo)
 
