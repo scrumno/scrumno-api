@@ -24,6 +24,12 @@ func NewRegistrationRepository(db *gorm.DB) RegistrationRepository {
 	}
 }
 
+func (r *registrationGormRepository) Create(ctx context.Context, entity *User) error {
+	return r.DB.WithContext(ctx).
+		Session(&gorm.Session{FullSaveAssociations: true}).
+		Create(entity).Error
+}
+
 func (r *registrationGormRepository) FindByPhone(ctx context.Context, phone string) (*User, error) {
 	var u User
 	err := r.DB.WithContext(ctx).

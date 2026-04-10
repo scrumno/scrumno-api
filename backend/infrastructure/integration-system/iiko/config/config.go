@@ -11,7 +11,7 @@ type Config struct {
 	Login            string    `env:"IIKO_LOGIN"`
 	AccessToken      string    `env:"IIKO_ACCESS_TOKEN"`
 	OrganizationID   uuid.UUID `env:"IIKO_ORGANIZATION_ID"`
-	TerminalGroupID  string    `env:"IIKO_TERMINAL_GROUP_ID"`
+	TerminalGroupID  uuid.UUID `env:"IIKO_TERMINAL_GROUP_ID"`
 	SnapshotFilePath string    `env:"IIKO_SNAPSHOT_FILE_PATH"`
 }
 
@@ -21,7 +21,7 @@ func Load() *Config {
 		Login:            os.Getenv("IIKO_LOGIN"),
 		AccessToken:      os.Getenv("IIKO_ACCESS_TOKEN"),
 		OrganizationID:   uuid.MustParse(os.Getenv("IIKO_ORGANIZATION_ID")),
-		TerminalGroupID:  os.Getenv("IIKO_TERMINAL_GROUP_ID"),
+		TerminalGroupID:  uuid.MustParse(os.Getenv("IIKO_TERMINAL_GROUP_ID")),
 		SnapshotFilePath: os.Getenv("IIKO_SNAPSHOT_FILE_PATH"),
 	}
 }

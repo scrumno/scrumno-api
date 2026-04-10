@@ -8,7 +8,6 @@ import (
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
 	createUser "github.com/scrumno/scrumno-api/internal/authorize/command/create-user"
-	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	findUserByPhone "github.com/scrumno/scrumno-api/internal/authorize/query/find-user-by-phone"
 )
 
@@ -53,36 +52,36 @@ func (a *RegistrationAction) Action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := a.FindUserByPhoneFetcher.Fetch(r.Context(), req.Phone)
-	if err != nil {
-		utils.JSONResponse(w, RegistrationErrorResponse{
-			IsSuccess: false,
-			Error:     err.Error(),
-		}, http.StatusBadRequest)
-		return
-	}
-	if user != nil {
-		utils.JSONResponse(w, RegistrationErrorResponse{
-			IsSuccess: false,
-			Error:     "Не удалось создать пользователя",
-		}, http.StatusBadRequest)
-		return
-	}
+	// user, err := a.FindUserByPhoneFetcher.Fetch(r.Context(), req.Phone)
+	// if err != nil {
+	// 	utils.JSONResponse(w, RegistrationErrorResponse{
+	// 		IsSuccess: false,
+	// 		Error:     err.Error(),
+	// 	}, http.StatusBadRequest)
+	// 	return
+	// }
+	// if user != nil {
+	// 	utils.JSONResponse(w, RegistrationErrorResponse{
+	// 		IsSuccess: false,
+	// 		Error:     "Не удалось создать пользователя",
+	// 	}, http.StatusBadRequest)
+	// 	return
+	// }
 
-	cmd := checkOntimeCode.Command{
-		Phone:    req.Phone,
-		Code:     req.Code,
-		CodeType: codes.RegisterType,
-	}
+	// cmd := checkOntimeCode.Command{
+	// 	Phone:    req.Phone,
+	// 	Code:     req.Code,
+	// 	CodeType: codes.RegisterType,
+	// }
 
-	err = a.CheckOntimeCodeHandler.Handle(r.Context(), cmd)
-	if err != nil {
-		utils.JSONResponse(w, RegistrationErrorResponse{
-			IsSuccess: false,
-			Error:     err.Error(),
-		}, http.StatusBadRequest)
-		return
-	}
+	// err = a.CheckOntimeCodeHandler.Handle(r.Context(), cmd)
+	// if err != nil {
+	// 	utils.JSONResponse(w, RegistrationErrorResponse{
+	// 		IsSuccess: false,
+	// 		Error:     err.Error(),
+	// 	}, http.StatusBadRequest)
+	// 	return
+	// }
 
 	createdUser, err := a.CreateUserHandler.Handle(
 		r.Context(),

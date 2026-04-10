@@ -61,7 +61,9 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		if cmd.Email != nil {
 			updatedUser.Email = cmd.Email
 		}
-		if err := h.customerSync.Sync(ctx, &updatedUser); err != nil {
+
+		_, err := h.customerSync.Sync(ctx, &updatedUser)
+		if err != nil {
 			return err
 		}
 	}

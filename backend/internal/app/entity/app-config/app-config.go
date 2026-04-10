@@ -18,4 +18,9 @@ type AppConfig struct {
 	// venues.address по-прежнему используется для геокодинга.
 	AddressManual *string    `gorm:"type:text" json:"address_manual,omitempty"`
 	UpdatedAt     *time.Time `                  json:"updated_at,omitempty"`
+
+	WorkingHours struct {
+		OpenAt  string `gorm:"type:varchar(5);not null" json:"open_at"`
+		CloseAt string `gorm:"type:varchar(5);not null" json:"close_at"`
+	}
 }

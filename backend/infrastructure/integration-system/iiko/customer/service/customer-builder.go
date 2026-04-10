@@ -12,6 +12,7 @@ type SearchableType string
 
 const (
 	Phone SearchableType = "phone"
+	Id    SearchableType = "id"
 )
 
 type CustomerBodyBuilder struct {
@@ -25,7 +26,8 @@ func NewCustomerBodyBuilder(config *iikoConfig.Config) *CustomerBodyBuilder {
 }
 
 type BuilderCommand struct {
-	SearchValue    string         `json:"phone"`
+	PhoneValue     *string        `json:"phone,omitempty"`
+	IdValue        *uuid.UUID     `json:"id,omitempty"`
 	Type           SearchableType `json:"type"`
 	OrganizationId uuid.UUID      `json:"organizationId"`
 }
@@ -66,11 +68,19 @@ type BuilderSetCommand struct {
 	OrganizationId                uuid.UUID          `json:"organizationId"`
 }
 
-func (h *CustomerBodyBuilder) BuildGet(ctx context.Context, phone string) any {
-	if phone != "" {
+func (h *CustomerBodyBuilder) BuildGet(ctx context.Context, phone *string, id *uuid.UUID) any {
+	if phone != nil {
 		return &BuilderCommand{
-			SearchValue:    phone,
+			PhoneValue:     phone,
 			Type:           Phone,
+			OrganizationId: h.config.OrganizationID,
+		}
+	}
+
+	if id != nil {
+		return &BuilderCommand{
+			IdValue:        id,
+			Type:           Id,
 			OrganizationId: h.config.OrganizationID,
 		}
 	}

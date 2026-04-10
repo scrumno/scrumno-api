@@ -33,7 +33,7 @@ func (p *MenuProvider) GetMenu() (any, error) {
 
 	requestBody, err := json.Marshal(map[string]string{
 		"organizationId":  p.config.OrganizationID.String(),
-		"terminalGroupId": p.config.TerminalGroupID,
+		"terminalGroupId": p.config.TerminalGroupID.String(),
 	})
 	if err != nil {
 		return payloadMenuModel.RefreshMenuSuccessPayload{}, err

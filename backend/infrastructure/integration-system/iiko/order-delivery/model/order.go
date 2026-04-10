@@ -1,5 +1,7 @@
 package model
 
+import "github.com/google/uuid"
+
 // OrderServiceType — Deliveries.Request.CreateOrder.OrderServiceType (только один из orderTypeId / orderServiceType).
 type OrderServiceType string
 
@@ -8,24 +10,18 @@ const (
 	OrderServiceDeliveryByClient  OrderServiceType = "DeliveryByClient" // самовывоз клиентом
 )
 
-// CreateOrderRequest — Deliveries.Request.CreateOrderRequest (POST /api/1/deliveries/create).
-// Обязательны organizationId и order; terminalGroupId и createOrderSettings — опциональны.
 type CreateOrderRequest struct {
 	OrganizationID      string               `json:"organizationId"`
 	TerminalGroupID     string               `json:"terminalGroupId,omitempty"`
-	Order               DeliveryOrder        `json:"order"`
 	CreateOrderSettings *CreateOrderSettings `json:"createOrderSettings,omitempty"`
+	Order               DeliveryOrder        `json:"order"`
 }
 
-// CreateOrderSettings — Orders.Common.CreateOrderSettings (для доставки без servicePrint).
 type CreateOrderSettings struct {
 	TransportToFrontTimeout int  `json:"transportToFrontTimeout,omitempty"`
 	CheckStopList           bool `json:"checkStopList,omitempty"`
 }
 
-// DeliveryOrder — Deliveries.Request.CreateOrder.DeliveryOrder.
-// Для самовывоза: orderServiceType = DeliveryByClient, deliveryPoint не передаётся.
-// Обязательны phone и items.
 type DeliveryOrder struct {
 	MenuID               *string               `json:"menuId,omitempty"`
 	ID                   string                `json:"id,omitempty"`
@@ -45,9 +41,9 @@ type DeliveryOrder struct {
 	DeliveryZone         string                `json:"deliveryZone,omitempty"`
 	PriceCategoryID      string                `json:"priceCategoryId,omitempty"`
 	Items                []OrderItem           `json:"items"`
-	Combos               []OrderCombo          `json:"combos,omitempty"`
-	Payments             []Payment             `json:"payments,omitempty"`
-	Tips                 []Tip                 `json:"tips,omitempty"`
+	Combos               *[]OrderCombo         `json:"combos,omitempty"`
+	Payments             *[]Payment            `json:"payments,omitempty"`
+	Tips                 *[]Tip                `json:"tips,omitempty"`
 	SourceKey            string                `json:"sourceKey,omitempty"`
 	DiscountsInfo        *DiscountsInfo        `json:"discountsInfo,omitempty"`
 	LoyaltyInfo          *LoyaltyInfo          `json:"loyaltyInfo,omitempty"`
@@ -55,8 +51,6 @@ type DeliveryOrder struct {
 	ExternalData         []ExternalDataEntry   `json:"externalData,omitempty"`
 }
 
-// DeliveryPoint — для курьерской доставки; для самовывоза обычно nil.
-// address — полиморфный (legacy/city), при необходимости заполняйте через map/отдельные DTO.
 type DeliveryPoint struct {
 	Coordinates           *Coordinates `json:"coordinates,omitempty"`
 	Address               any          `json:"address,omitempty"`
@@ -69,7 +63,6 @@ type Coordinates struct {
 	Longitude float64 `json:"longitude"`
 }
 
-// Customer — discriminator type: regular / one-time (см. iiko API).
 type Customer struct {
 	ID                                    string `json:"id,omitempty"`
 	Name                                  string `json:"name,omitempty"`
@@ -83,7 +76,6 @@ type Customer struct {
 	Type                                  string `json:"type,omitempty"`
 }
 
-// Guests — count обязателен, если объект передан.
 type Guests struct {
 	Count               int   `json:"count"`
 	SplitBetweenPersons *bool `json:"splitBetweenPersons,omitempty"`
@@ -92,9 +84,11 @@ type Guests struct {
 type OrderItem struct {
 	Type             string            `json:"type"`
 	Amount           float64           `json:"amount"`
+	ProductID        string            `json:"productId"`
 	ProductSizeID    string            `json:"productSizeId,omitempty"`
 	ComboInformation *ComboInformation `json:"comboInformation,omitempty"`
 	Comment          string            `json:"comment,omitempty"`
+	Price            float64           `json:"price"`
 }
 
 type ComboInformation struct {
@@ -177,4 +171,19 @@ type ExternalDataEntry struct {
 	Key      string `json:"key"`
 	Value    string `json:"value"`
 	IsPublic bool   `json:"isPublic,omitempty"`
+}
+
+type OrderSetResponse struct {
+	OrderID   uuid.UUID     `json:"orderId"`
+	OrderInfo *OrderInfoDTO `json:"orderInfo,omitempty"`
+}
+
+type OrderInfoDTO struct {
+	ID             uuid.UUID `json:"id"`
+	CreationStatus string    `json:"creationStatus"`
+}
+
+type OrderResponse struct {
+	ID     uuid.UUID `json:"id"`
+	Status string    `json:"status"`
 }

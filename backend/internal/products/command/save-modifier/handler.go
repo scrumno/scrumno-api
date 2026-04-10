@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/scrumno/scrumno-api/internal/products/entity/modifier"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
@@ -73,6 +74,17 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 			Splittable:          m.Splittable,
 			FreeOfChargeAmount:  m.FreeOfChargeAmount,
 		}); err != nil {
+			return err
+		}
+		if _, err := h.modifierRepo.FindCookingTimeModifierTableByExternalID(ctx, m.ID); err == nil {
+		} else if err == gorm.ErrRecordNotFound {
+			if err := h.modifierRepo.UpdateCookingTimeModifierTable(ctx, &modifier.CookingTimeModifierTable{
+				ModifierID:  m.ID,
+				CookingTime: 0,
+			}); err != nil {
+				return err
+			}
+		} else {
 			return err
 		}
 	}

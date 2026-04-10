@@ -65,4 +65,3 @@ func NewTokenRefresher(cfg *iikoConfig.Config) func(ctx context.Context) (string
 		return tokenResponse.Token, nil
 	}
 }
-

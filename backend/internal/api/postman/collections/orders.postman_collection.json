@@ -33,8 +33,20 @@
                             ]
                         },
                         "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
                         "body": {
-                            "mode": ""
+                            "mode": "raw",
+                            "raw": "{\n  \"comment\": \"Комментарий\",\n  \"phone\": \"79999009999\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
                         }
                     }
                 }
