@@ -5,6 +5,7 @@ import (
 
 	iikoConfig "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/config"
 	iikoMenuService "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/menu/service"
+	iikoOrderService "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/order/service"
 	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action"
 	authAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/auth"
@@ -116,6 +117,8 @@ func DI() (*action.Actions, *action.Listeners) {
 
 		// actions
 		refreshMenuAction = menu.NewRefreshMenuAction(getMenuHandler)
+
+		orderProvider = iikoOrderService.NewOrderProvider(iikoCfg)
 	}
 
 	/* INTEGRATION SYSTEMs END */

@@ -1,5 +1,59 @@
 package model
 
+// GetRestaurantSectionsRequest — POST /api/1/reserve/available_restaurant_sections.
+type GetRestaurantSectionsRequest struct {
+	TerminalGroupIDs []string `json:"terminalGroupIds"`
+	ReturnSchema     bool     `json:"returnSchema,omitempty"`
+}
+
+// GetTableOrdersByTableRequest — POST /api/1/order/by_table (заказы iikoFront по столам, не доставки).
+type GetTableOrdersByTableRequest struct {
+	OrganizationIDs []string `json:"organizationIds"`
+	TableIDs        []string `json:"tableIds"`
+	Statuses        []string `json:"statuses,omitempty"`
+	DateFrom        *string  `json:"dateFrom,omitempty"`
+	DateTo          *string  `json:"dateTo,omitempty"`
+	SourceKeys      []string `json:"sourceKeys,omitempty"`
+}
+
+// TerminalOrdersList — ответ iiko OrderProvider.GetList (заказы по терминальной группе за окно времени).
+type TerminalOrdersList struct {
+	TerminalGroupID string               `json:"terminalGroupId"`
+	WindowSeconds   int                  `json:"windowSeconds"`
+	DateFrom        string               `json:"dateFrom"`
+	DateTo          string               `json:"dateTo"`
+	TableIDs        []string             `json:"tableIds"`
+	Orders          []TableOrderListItem `json:"orders"`
+	Note            string               `json:"note,omitempty"`
+}
+
+// TableOrderListItem — элемент orders из POST /api/1/order/by_table.
+type TableOrderListItem struct {
+	ID             string              `json:"id"`
+	CreationStatus string              `json:"creationStatus"`
+	Order          *TableOrderSnapshot `json:"order"`
+}
+
+// TableOrderSnapshot — поля заказа iikoFront, используемые для отбора и UI.
+type TableOrderSnapshot struct {
+	TerminalGroupID string `json:"terminalGroupId"`
+	WhenCreated     string `json:"whenCreated"`
+	WhenBillPrinted string `json:"whenBillPrinted"`
+	WhenClosed      string `json:"whenClosed"`
+	Status          string `json:"status"`
+}
+
+// OrdersByDeliveryDateAndStatusRequest — POST /api/1/deliveries/by_delivery_date_and_status.
+// Список заказов по организации, интервалу даты доставки/самовывоза и статусам.
+type OrdersByDeliveryDateAndStatusRequest struct {
+	OrganizationIDs  []string `json:"organizationIds"`
+	DeliveryDateFrom string   `json:"deliveryDateFrom"`
+	DeliveryDateTo   *string  `json:"deliveryDateTo,omitempty"`
+	Statuses         []string `json:"statuses,omitempty"`
+	SourceKeys       []string `json:"sourceKeys,omitempty"`
+	CourierIDs       []string `json:"courierIds,omitempty"`
+}
+
 // OrderServiceType — Deliveries.Request.CreateOrder.OrderServiceType (только один из orderTypeId / orderServiceType).
 type OrderServiceType string
 

@@ -11,6 +11,9 @@ type ModifierRepository interface {
 	SaveProductModifier(ctx context.Context, modifier *ProductModifier) error
 	SaveProductChildModifier(ctx context.Context, modifier *ProductChildModifier) error
 	SaveProductModifierGroup(ctx context.Context, group *ProductModifierGroup) error
+	GetCookingTimeModifierTableByModifierIDs(ctx context.Context, modifierIDs []string) ([]CookingTimeModifierTable, error)
+	FindCookingTimeModifierTableByExternalID(ctx context.Context, externalID string) (*CookingTimeModifierTable, error)
+	UpdateCookingTimeModifierTable(ctx context.Context, entity *CookingTimeModifierTable) error
 }
 
 type modifierRepository struct {
@@ -40,4 +43,26 @@ func (r *modifierRepository) SaveProductChildModifier(ctx context.Context, modif
 func (r *modifierRepository) SaveProductModifierGroup(ctx context.Context, group *ProductModifierGroup) error {
 	_, err := r.ProductModifierGroupRepo.Save(ctx, group)
 	return err
+}
+
+func (r *modifierRepository) GetCookingTimeModifierTableByModifierIDs(ctx context.Context, modifierIDs []string) ([]CookingTimeModifierTable, error) {
+	var entities []CookingTimeModifierTable
+	err := r.ProductModifierRepo.DB.WithContext(ctx).Where("modifier_id IN ?", modifierIDs).Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
+}
+
+func (r *modifierRepository) UpdateCookingTimeModifierTable(ctx context.Context, entity *CookingTimeModifierTable) error {
+	return r.ProductModifierRepo.DB.WithContext(ctx).Save(entity).Error
+}
+
+func (r *modifierRepository) FindCookingTimeModifierTableByExternalID(ctx context.Context, externalID string) (*CookingTimeModifierTable, error) {
+	var entity CookingTimeModifierTable
+	err := r.ProductModifierRepo.DB.WithContext(ctx).Where("external_id = ?", externalID).First(&entity).Error
+	if err != nil {
+		return nil, err
+	}
+	return &entity, nil
 }

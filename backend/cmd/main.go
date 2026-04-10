@@ -45,9 +45,11 @@ func main() {
 		&codes.AuthorizeCode{},
 		&authorizeTokens.AuthorizeToken{},
 		&product.Product{},
+		&product.CookingTimeProductTable{},
 		&modifier.ProductModifier{},
 		&modifier.ProductChildModifier{},
 		&modifier.ProductModifierGroup{},
+		&modifier.CookingTimeModifierTable{},
 		&section.Section{},
 		&category.Category{},
 	); err != nil {
