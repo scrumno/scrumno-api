@@ -2,6 +2,7 @@ package model
 
 import "github.com/google/uuid"
 
+// OrderServiceType — Deliveries.Request.CreateOrder.OrderServiceType (только один из orderTypeId / orderServiceType).
 type OrderServiceType string
 
 const (

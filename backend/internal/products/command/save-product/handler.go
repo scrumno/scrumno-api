@@ -82,6 +82,18 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		if _, err := h.productRepo.Save(ctx, &entity); err != nil {
 			return err
 		}
+
+		if _, err := h.productRepo.FindCookingTimeProductTableByExternalID(ctx, incomingProduct.ID); err == nil {
+		} else if err == gorm.ErrRecordNotFound {
+			if err := h.productRepo.UpdateCookingTimeProductTable(ctx, &product.CookingTimeProductTable{
+				ProductID:   entity.ID,
+				CookingTime: 0,
+			}); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	return nil
