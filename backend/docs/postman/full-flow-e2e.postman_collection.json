@@ -1,0 +1,308 @@
+{
+  "info": {
+    "name": "Self-delivery — Full flow (reg → menu → cart → pay → iiko)",
+    "description": "Сквозной сценарий для Postman Runner.\n\n**Перед запуском:**\n1. Задайте коллекционные переменные `base_url` и `venue_id` (UUID точки из вашей БД, `venues.id` / `app_configs.venue_id`).\n2. Поднимите API и PostgreSQL; при `INTEGRATION_SYSTEM=iiko` в `.env` должны быть валидные `IIKO_*` и токен, иначе шаг оплаты не создаст заказ в iiko.\n3. `phone` по умолчанию генерируется в pre-request, чтобы не упираться в дубликат пользователя; при необходимости задайте свой.\n\n**Порядок:** регистрация → create cart → (опционально refresh menu) → get menu → add product → create draft → pay draft.\n\nМеню: `GET /menu/get-menu` с JSON-телом `{\"offset\":0,\"limit\":50}` (как в бэкенде).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8087" },
+    { "key": "venue_id", "value": "" },
+    { "key": "phone", "value": "" },
+    { "key": "access_token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "product_id", "value": "" },
+    { "key": "base_price", "value": "100" },
+    { "key": "draft_id", "value": "" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "let phone = pm.collectionVariables.get('phone');",
+          "if (!phone || String(phone).trim() === '') {",
+          "  const suffix = String(Date.now()).slice(-9);",
+          "  pm.collectionVariables.set('phone', '79' + suffix);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Full flow",
+      "item": [
+        {
+          "name": "0. Optional — Refresh menu (iiko)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": "{{base_url}}/api/v1/iiko/refresh-menu"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Refresh menu ответил 2xx', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+                  "});",
+                  "try {",
+                  "  const j = pm.response.json();",
+                  "  if (j && j.isSuccess === false) {",
+                  "    console.warn('refresh-menu:', j.error || j);",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1. Auth — Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"{{phone}}\",\n  \"code\": \"0000\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/auth/registration"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Регистрация успешна', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.isSuccess).to.be.true;",
+                  "  pm.expect(j.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('access_token', j.accessToken);",
+                  "});",
+                  "",
+                  "function parseJwtPayload(token) {",
+                  "  const parts = token.split('.');",
+                  "  if (parts.length !== 3) throw new Error('Invalid JWT');",
+                  "  let payload = parts[1];",
+                  "  const pad = payload.length % 4;",
+                  "  if (pad) payload += '='.repeat(4 - pad);",
+                  "  payload = payload.replace(/-/g, '+').replace(/_/g, '/');",
+                  "  const jsonPayload = decodeURIComponent(atob(payload).split('').map(function (c) {",
+                  "    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);",
+                  "  }).join(''));",
+                  "  return JSON.parse(jsonPayload);",
+                  "}",
+                  "",
+                  "const token = pm.collectionVariables.get('access_token');",
+                  "const claims = parseJwtPayload(token);",
+                  "const uid = claims.user_id || claims.sub;",
+                  "pm.test('В JWT есть user_id', function () {",
+                  "  pm.expect(uid).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('user_id', uid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Cart — Create cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"UserID\": \"{{user_id}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/cart/create"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Корзина создана', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.isSuccess).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Menu — Get menu",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offset\": 0,\n  \"limit\": 50\n}"
+            },
+            "url": "{{base_url}}/api/v1/menu/get-menu"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Меню получено', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.products).to.be.an('array').that.is.not.empty;",
+                  "  const p = j.products[0];",
+                  "  const pid = p.id != null ? String(p.id) : (p.ID != null ? String(p.ID) : '');",
+                  "  pm.expect(pid).to.not.be.empty;",
+                  "  pm.collectionVariables.set('product_id', pid);",
+                  "  let price = parseFloat(pm.collectionVariables.get('base_price'), 10);",
+                  "  if (p.sizePrices && p.sizePrices.length && p.sizePrices[0].price) {",
+                  "    const cp = p.sizePrices[0].price.currentPrice;",
+                  "    if (typeof cp === 'number' && cp > 0) price = cp;",
+                  "  }",
+                  "  pm.collectionVariables.set('base_price', String(price));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Cart — Add product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"UserID\": \"{{user_id}}\",\n  \"ProductID\": \"{{product_id}}\",\n  \"Quantity\": 1,\n  \"BasePrice\": {{base_price}}\n}"
+            },
+            "url": "{{base_url}}/api/v1/cart/add-product"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Товар добавлен в корзину', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.isSuccess).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Orders — Create draft",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venue_id\": \"{{venue_id}}\",\n  \"phone\": \"{{phone}}\",\n  \"comment\": \"Postman full flow\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/orders/create-draft"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const v = pm.collectionVariables.get('venue_id');",
+                  "if (!v || String(v).trim() === '') {",
+                  "  throw new Error('Задайте collection variable venue_id (UUID точки) перед запуском.');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Черновик заказа создан', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.is_success).to.be.true;",
+                  "  pm.expect(j.draft_id).to.be.a('string').and.not.empty;",
+                  "  pm.collectionVariables.set('draft_id', j.draft_id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Orders — Pay draft (stub + iiko create)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"draft_id\": \"{{draft_id}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/orders/pay-draft"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Оплата и создание в iiko успешны', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.is_success, JSON.stringify(j)).to.be.true;",
+                  "  pm.expect(j.provider_state).to.eql('Success');",
+                  "  pm.expect(j.can_subscribe).to.be.true;",
+                  "  pm.expect(j.order_id).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
