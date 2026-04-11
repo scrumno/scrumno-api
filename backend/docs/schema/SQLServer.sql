@@ -64,6 +64,8 @@ CREATE TABLE [app_configs] (
   [logo_url] text,
   [banner_url] text,
   [address_manual] text,
+  [queue_sync_revision] bigint NOT NULL DEFAULT (0),
+  [queue_sync_updated_at] timestamptz,
   [updated_at] timestamptz
 )
 GO

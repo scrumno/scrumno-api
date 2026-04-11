@@ -60,7 +60,7 @@ func (r *modifierRepository) UpdateCookingTimeModifierTable(ctx context.Context,
 
 func (r *modifierRepository) FindCookingTimeModifierTableByExternalID(ctx context.Context, externalID string) (*CookingTimeModifierTable, error) {
 	var entity CookingTimeModifierTable
-	err := r.ProductModifierRepo.DB.WithContext(ctx).Where("external_id = ?", externalID).First(&entity).Error
+	err := r.ProductModifierRepo.DB.WithContext(ctx).Where("modifier_id = ?", externalID).First(&entity).Error
 	if err != nil {
 		return nil, err
 	}

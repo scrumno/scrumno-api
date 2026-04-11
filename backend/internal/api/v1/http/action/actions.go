@@ -7,6 +7,7 @@ import (
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	menuAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
+	queueAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/queue"
 	userAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
 	saveMenu "github.com/scrumno/scrumno-api/internal/menu/listener/save-menu"
 	saveModifier "github.com/scrumno/scrumno-api/internal/products/listener/save-modifier"
@@ -34,6 +35,12 @@ type Actions struct {
 
 	// iiko
 	RefreshMenu *menuAction.RefreshMenuAction
+	RefreshQueue *queueAction.RefreshQueueAction
+
+	// queue
+	GetQueue         *queueAction.GetQueueAction
+	AddInQueue       *queueAction.AddInQueueAction
+	GetNearestRange  *queueAction.GetNearestRangeAction
 
 	// auth
 	Registration  *auth.RegistrationAction

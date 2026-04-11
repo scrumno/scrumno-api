@@ -14,8 +14,10 @@ type ProductRepository interface {
 	FindByExternalID(ctx context.Context, externalID string) (*Product, error)
 	GetByCategoryID(ctx context.Context, categoryID string, offset int, limit int) ([]Product, error)
 	FindCookingTimeProductTableByExternalID(ctx context.Context, externalID string) (*CookingTimeProductTable, error)
+	FindCookingTimeProductTableByProductID(ctx context.Context, productID uint) (*CookingTimeProductTable, error)
 	UpdateCookingTimeProductTable(ctx context.Context, entity *CookingTimeProductTable) error
 	GetCookingTimeProductTableByProductIDs(ctx context.Context, productIDs []string) ([]CookingTimeProductTable, error)
+	GetCookingTimeProductTableByProductUintIDs(ctx context.Context, productIDs []uint) ([]CookingTimeProductTable, error)
 }
 
 type productRepository struct {
@@ -69,10 +71,27 @@ func (r *productRepository) GetCookingTimeProductTableByProductIDs(ctx context.C
 }
 
 func (r *productRepository) FindCookingTimeProductTableByExternalID(ctx context.Context, externalID string) (*CookingTimeProductTable, error) {
+	productEntity, err := r.FindByExternalID(ctx, externalID)
+	if err != nil {
+		return nil, err
+	}
+	return r.FindCookingTimeProductTableByProductID(ctx, productEntity.ID)
+}
+
+func (r *productRepository) FindCookingTimeProductTableByProductID(ctx context.Context, productID uint) (*CookingTimeProductTable, error) {
 	var entity CookingTimeProductTable
-	err := r.DB.WithContext(ctx).Where("external_id = ?", externalID).First(&entity).Error
+	err := r.DB.WithContext(ctx).Where("product_id = ?", productID).First(&entity).Error
 	if err != nil {
 		return nil, err
 	}
 	return &entity, nil
+}
+
+func (r *productRepository) GetCookingTimeProductTableByProductUintIDs(ctx context.Context, productIDs []uint) ([]CookingTimeProductTable, error) {
+	var entities []CookingTimeProductTable
+	err := r.DB.WithContext(ctx).Where("product_id IN ?", productIDs).Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
 }

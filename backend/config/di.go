@@ -13,7 +13,10 @@ import (
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
+	queueAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/queue"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/user"
+	appConfig "github.com/scrumno/scrumno-api/internal/app/entity/app-config"
+	getWorkingTime "github.com/scrumno/scrumno-api/internal/app/query/get-working-time"
 	checkOntimeCode "github.com/scrumno/scrumno-api/internal/authorize/command/check-ontime-code"
 	createAuthorizeCode "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-code"
 	createAuthorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/command/create-authorize-tokens"
@@ -36,6 +39,10 @@ import (
 
 	saveMenuListener "github.com/scrumno/scrumno-api/internal/menu/listener/save-menu"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
+	addInQueue "github.com/scrumno/scrumno-api/internal/queue/command/add-in-queue"
+	queueEntity "github.com/scrumno/scrumno-api/internal/queue/entity"
+	getQueue "github.com/scrumno/scrumno-api/internal/queue/query/get-queue"
+	queueService "github.com/scrumno/scrumno-api/internal/queue/service"
 	saveModifier "github.com/scrumno/scrumno-api/internal/products/command/save-modifier"
 	saveProductCommand "github.com/scrumno/scrumno-api/internal/products/command/save-product"
 	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
@@ -140,6 +147,8 @@ func DI() (*action.Actions, *action.Listeners) {
 	modifierRepo := modifier.NewModifierRepository(DB)
 	sectionRepo := section.NewSectionRepository(DB)
 	categoryRepo := category.NewCategoryRepository(DB)
+	appConfigRepo := appConfig.NewAppConfigRepository(DB)
+	queueRepo := queueEntity.NewQueueRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		AccessSecret:    string(cfg.JWT.SecretKey),
@@ -173,9 +182,44 @@ func DI() (*action.Actions, *action.Listeners) {
 	removeProductHandler := removeProduct.NewHandler(cartRepo)
 	updateProductHandler := updateProduct.NewHandler(cartRepo)
 	getCartFetcher := getCart.NewFetcher(cartRepo)
+	getWorkingTimeFetcher := getWorkingTime.NewFetcher(appConfigRepo)
+	getQueueFetcher := getQueue.NewFetcher(queueRepo)
 
 	saveModifierHandler := saveModifier.NewHandler(modifierRepo)
 	saveMenuHandler := saveMenu.NewHandler(sectionRepo, categoryRepo)
+	addInQueueHandler := addInQueue.NewHandler(queueRepo)
+
+	queueCalculator := queueService.NewOrdersQueueService(&queueEntity.OrdersQueueConfigTable{
+		KitchenParallelSlots:  1,
+		QueueGrowthFactor:     0.15,
+		OrderReserveMinutes:   2,
+		RestaurantOpenAt:      "10:00",
+		RestaurantCloseAt:     "22:00",
+		EmptyQueueWaitMinMins: 10,
+		EmptyQueueWaitMaxMins: 10,
+		QueueTimeMinFactor:    0.90,
+		QueueTimeMaxFactor:    1.25,
+	}, DB)
+	queueMapper := queueService.NewQueueOrderMapper(productRepo, modifierRepo)
+
+	var queueSync queueService.QueueSyncService
+	if iikoCfg != nil {
+		ordersByRevisionProvider := order.NewOrdersByRevisionProvider(iikoCfg)
+		ordersByRevisionAdapter := queueService.NewIikoOrdersByRevisionAdapter(ordersByRevisionProvider)
+		queueSync = queueService.NewQueueSyncService(appConfigRepo, queueRepo, ordersByRevisionAdapter)
+	}
+
+	getQueueAction := queueAction.NewGetQueueAction(
+		getWorkingTimeFetcher,
+		getQueueFetcher,
+		queueCalculator,
+		queueMapper,
+		queueSync,
+		getCartFetcher,
+	)
+	refreshQueueAction := queueAction.NewRefreshQueueAction(queueSync)
+	addInQueueAction := queueAction.NewAddInQueueAction(addInQueueHandler)
+	getNearestRangeAction := queueAction.NewGetNearestRangeAction(getQueueAction)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
@@ -221,6 +265,12 @@ func DI() (*action.Actions, *action.Listeners) {
 			// общие экшены для всех интеграционных систем
 			RefreshMenu: &refreshMenuAction,
 			GetMenu:     menu.NewGetMenuAction(getCategoriesFetcher, getSectionsFetcher, getProductsFetcher),
+			RefreshQueue: refreshQueueAction,
+
+			// queue
+			GetQueue:        getQueueAction,
+			AddInQueue:      addInQueueAction,
+			GetNearestRange: getNearestRangeAction,
 		},
 		&action.Listeners{
 			SaveProduct:  saveProductListener,

@@ -16,11 +16,13 @@ type AppConfig struct {
 	BannerURL   *string `gorm:"type:text"                         json:"banner_url,omitempty"`
 	// Перекрывает venues.address только в UI PWA.
 	// venues.address по-прежнему используется для геокодинга.
-	AddressManual *string    `gorm:"type:text" json:"address_manual,omitempty"`
-	UpdatedAt     *time.Time `                  json:"updated_at,omitempty"`
+	AddressManual      *string    `gorm:"type:text" json:"address_manual,omitempty"`
+	QueueSyncRevision  int64      `gorm:"not null;default:0" json:"queue_sync_revision"`
+	QueueSyncUpdatedAt *time.Time `json:"queue_sync_updated_at,omitempty"`
+	UpdatedAt          *time.Time `json:"updated_at,omitempty"`
 
 	WorkingHours struct {
-		OpenAt  string `gorm:"type:varchar(5);not null" json:"open_at"`
-		CloseAt string `gorm:"type:varchar(5);not null" json:"close_at"`
+		OpenAt  string `gorm:"type:varchar(5);not null;default:'10:00'" json:"open_at"`
+		CloseAt string `gorm:"type:varchar(5);not null;default:'22:00'" json:"close_at"`
 	}
 }

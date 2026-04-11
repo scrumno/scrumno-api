@@ -191,6 +191,52 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"/create-order",
 	)
 
+	queuePrefix := "/queue"
+	queueRouter := api.PathPrefix(queuePrefix).Subrouter()
+	if actions.JWTManager != nil {
+		queueRouter.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
+	}
+	if actions.GetQueue != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			queueRouter,
+			queuePrefix,
+			actions.GetQueue.Action,
+			actions.GetQueue.GetInputType(),
+			"POST",
+			"/get-range",
+		)
+	}
+	if actions.GetNearestRange != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			queueRouter,
+			queuePrefix,
+			actions.GetNearestRange.Action,
+			actions.GetNearestRange.GetInputType(),
+			"POST",
+			"/nearest-range",
+		)
+	}
+	if actions.AddInQueue != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			queueRouter,
+			queuePrefix,
+			actions.AddInQueue.Action,
+			actions.AddInQueue.GetInputType(),
+			"POST",
+			"/add",
+		)
+	}
+	if actions.RefreshQueue != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			queueRouter,
+			queuePrefix,
+			actions.RefreshQueue.Action,
+			actions.RefreshQueue.GetInputType(),
+			"POST",
+			"/refresh",
+		)
+	}
+
 	// iiko integration endpoints
 	iikoPrefix := "/iiko"
 	iiko := api.PathPrefix(iikoPrefix).Subrouter()
