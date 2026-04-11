@@ -113,9 +113,48 @@ CREATE TABLE "app_configs" (
   "logo_url" text,
   "banner_url" text,
   "address_manual" text,
+  "open_at" varchar(5) NOT NULL DEFAULT '10:00',
+  "close_at" varchar(5) NOT NULL DEFAULT '22:00',
   "queue_sync_revision" bigint DEFAULT 0 NOT NULL,
   "queue_sync_updated_at" timestamptz,
   "updated_at" timestamptz
+);
+
+CREATE TABLE "order-draft-table" (
+  "id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
+  "user_id" uuid NOT NULL,
+  "venue_id" uuid NOT NULL,
+  "cart_snapshot_json" jsonb NOT NULL,
+  "amount" numeric(12,2) NOT NULL,
+  "payment_status" boolean NOT NULL DEFAULT false,
+  "provider_create_status" boolean NOT NULL DEFAULT false,
+  "provider_pending" boolean NOT NULL DEFAULT false,
+  "provider_correlation_id" uuid,
+  "provider_order_id" uuid,
+  "provider_error" text,
+  "created_at" timestamptz DEFAULT (now()),
+  "updated_at" timestamptz DEFAULT (now())
+);
+
+CREATE TABLE "order-subscribers-table" (
+  "id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
+  "order_id" uuid NOT NULL,
+  "user_id" uuid NOT NULL,
+  "connection_id" varchar(128) NOT NULL,
+  "is_active" boolean NOT NULL DEFAULT true,
+  "created_at" timestamptz DEFAULT (now()),
+  "updated_at" timestamptz DEFAULT (now())
+);
+
+CREATE TABLE "order-history-table" (
+  "id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
+  "draft_id" uuid,
+  "user_id" uuid NOT NULL,
+  "venue_id" uuid NOT NULL,
+  "provider_order_id" uuid NOT NULL,
+  "status" varchar(64) NOT NULL DEFAULT 'Created',
+  "created_at" timestamptz DEFAULT (now()),
+  "updated_at" timestamptz DEFAULT (now())
 );
 
 

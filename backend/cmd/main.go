@@ -10,14 +10,17 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/scrumno/scrumno-api/config"
 	v1 "github.com/scrumno/scrumno-api/internal/api/v1"
+	appConfig "github.com/scrumno/scrumno-api/internal/app/entity/app-config"
 	user "github.com/scrumno/scrumno-api/internal/authorize/entity"
 	codes "github.com/scrumno/scrumno-api/internal/authorize/entity/codes"
 	authorizeTokens "github.com/scrumno/scrumno-api/internal/authorize/entity/tokens"
 	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
 	category "github.com/scrumno/scrumno-api/internal/menu/entity/category"
 	section "github.com/scrumno/scrumno-api/internal/menu/entity/section"
+	ordersEntity "github.com/scrumno/scrumno-api/internal/orders/entity"
 	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
+	queueEntity "github.com/scrumno/scrumno-api/internal/queue/entity"
 	staffRole "github.com/scrumno/scrumno-api/internal/users/entity/staff-role"
 )
 
@@ -25,7 +28,7 @@ func main() {
 	_ = godotenv.Overload(".env")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: slog.LevelDebug,
 	}))
 	slog.SetDefault(logger)
 
@@ -52,6 +55,11 @@ func main() {
 		&modifier.CookingTimeModifierTable{},
 		&section.Section{},
 		&category.Category{},
+		&appConfig.AppConfig{},
+		&queueEntity.OrdersQueueTable{},
+		&ordersEntity.OrderDraftTable{},
+		&ordersEntity.OrderSubscribersTable{},
+		&ordersEntity.OrderHistoryTable{},
 	); err != nil {
 		logger.Error("миграция БД", "error", err)
 		os.Exit(1)

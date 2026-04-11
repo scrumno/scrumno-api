@@ -174,8 +174,9 @@ type ExternalDataEntry struct {
 }
 
 type OrderSetResponse struct {
-	OrderID   uuid.UUID     `json:"orderId"`
-	OrderInfo *OrderInfoDTO `json:"orderInfo,omitempty"`
+	CorrelationID uuid.UUID     `json:"correlationId"`
+	OrderID       uuid.UUID     `json:"orderId"`
+	OrderInfo     *OrderInfoDTO `json:"orderInfo,omitempty"`
 }
 
 type OrderInfoDTO struct {

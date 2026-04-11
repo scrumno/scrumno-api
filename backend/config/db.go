@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -21,7 +23,7 @@ type DatabaseConfig struct {
 
 func (c *DatabaseConfig) DSN() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s client_encoding=UTF8",
+		"host=%s port=%s user=%s dbname=%s sslmode=%s password=%s client_encoding=UTF8 connect_timeout=5",
 		c.Host, c.Port, c.Username, c.DatabaseName, c.SSLMode, c.Password,
 	)
 }
@@ -29,6 +31,13 @@ func (c *DatabaseConfig) DSN() string {
 var DB *gorm.DB
 
 func Connect(cfg *Config) error {
+	if strings.TrimSpace(cfg.Database.Username) == "" {
+		return errors.New("DATABASE_USERNAME is required")
+	}
+	if strings.TrimSpace(cfg.Database.DatabaseName) == "" {
+		return errors.New("DATABASE_NAME is required")
+	}
+
 	var err error
 	dsn := cfg.Database.DSN()
 	slog.Info("Подключение к БД", "dsn", dsn)
@@ -53,6 +62,11 @@ func Connect(cfg *Config) error {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+
+	if err := sqlDB.Ping(); err != nil {
+		return fmt.Errorf("database ping failed: %w", err)
+	}
 
 	slog.Info("Подключение к БД установлено")
 	return nil

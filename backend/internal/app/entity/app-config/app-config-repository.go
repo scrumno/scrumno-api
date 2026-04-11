@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	factory "github.com/scrumno/scrumno-api/shared/factories/gorm"
 	"github.com/scrumno/scrumno-api/shared/interfaces/base"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -28,21 +28,18 @@ func NewAppConfigRepository(db *gorm.DB) AppConfigRepository {
 }
 
 func (r *appConfigRepository) GetWorkingHours(ctx context.Context) (string, string, error) {
-	var workingHours struct {
-		OpenAt  string `json:"open_at"`
-		CloseAt string `json:"close_at"`
-	}
+	var cfg AppConfig
 	db := r.DB.WithContext(ctx)
 	venueID, ok := ctx.Value("venue_id").(string)
 	if ok && venueID != "" {
 		db = db.Where("venue_id = ?", venueID)
 	}
 
-	err := db.First(&workingHours).Error
+	err := db.Select("open_at", "close_at").First(&cfg).Error
 	if err != nil {
 		return "", "", err
 	}
-	return workingHours.OpenAt, workingHours.CloseAt, nil
+	return cfg.OpenAt, cfg.CloseAt, nil
 }
 
 func (r *appConfigRepository) GetQueueSyncState(ctx context.Context, venueID uuid.UUID) (int64, error) {

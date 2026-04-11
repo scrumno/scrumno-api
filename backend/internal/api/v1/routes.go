@@ -2,6 +2,7 @@ package v1
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/scrumno/scrumno-api/config"
@@ -190,21 +191,38 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 		"POST",
 		"/create-order",
 	)
+	if actions.CreateOrderDraft != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			orders,
+			ordersPrefix,
+			actions.CreateOrderDraft.Action,
+			actions.CreateOrderDraft.GetInputType(),
+			"POST",
+			"/create-draft",
+		)
+	}
+	if actions.PayOrderDraft != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			orders,
+			ordersPrefix,
+			actions.PayOrderDraft.Action,
+			actions.PayOrderDraft.GetInputType(),
+			"POST",
+			"/pay-draft",
+		)
+	}
+	if actions.OrdersWebSocket != nil {
+		wsHandler := http.Handler(http.HandlerFunc(actions.OrdersWebSocket.Action))
+		if actions.JWTManager != nil {
+			wsHandler = middleware.NewAuthMiddleware(actions.JWTManager).Authenticator(wsHandler)
+		}
+		orders.Handle("/ws", wsHandler).Methods("GET")
+	}
 
 	queuePrefix := "/queue"
 	queueRouter := api.PathPrefix(queuePrefix).Subrouter()
 	if actions.JWTManager != nil {
 		queueRouter.Use(middleware.NewAuthMiddleware(actions.JWTManager).Authenticator)
-	}
-	if actions.GetQueue != nil {
-		collectorRoutes.HandleFuncWithPostman(
-			queueRouter,
-			queuePrefix,
-			actions.GetQueue.Action,
-			actions.GetQueue.GetInputType(),
-			"POST",
-			"/get-range",
-		)
 	}
 	if actions.GetNearestRange != nil {
 		collectorRoutes.HandleFuncWithPostman(
@@ -214,26 +232,6 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 			actions.GetNearestRange.GetInputType(),
 			"POST",
 			"/nearest-range",
-		)
-	}
-	if actions.AddInQueue != nil {
-		collectorRoutes.HandleFuncWithPostman(
-			queueRouter,
-			queuePrefix,
-			actions.AddInQueue.Action,
-			actions.AddInQueue.GetInputType(),
-			"POST",
-			"/add",
-		)
-	}
-	if actions.RefreshQueue != nil {
-		collectorRoutes.HandleFuncWithPostman(
-			queueRouter,
-			queuePrefix,
-			actions.RefreshQueue.Action,
-			actions.RefreshQueue.GetInputType(),
-			"POST",
-			"/refresh",
 		)
 	}
 
@@ -249,6 +247,16 @@ func SetupRouter(cfg *config.Config, actions *action.Actions) *mux.Router {
 			actions.RefreshMenu.GetInputType(),
 			"POST",
 			"/refresh-menu",
+		)
+	}
+	if actions.IikoOrderWebhook != nil {
+		collectorRoutes.HandleFuncWithPostman(
+			iiko,
+			iikoPrefix,
+			actions.IikoOrderWebhook.Action,
+			actions.IikoOrderWebhook.GetInputType(),
+			"POST",
+			"/order-webhook",
 		)
 	}
 	// INTEGRATION SYSTEMs END

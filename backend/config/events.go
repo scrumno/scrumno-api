@@ -13,10 +13,27 @@ func GetEventManager() *eventManager.EventManager {
 
 // TODO: ВАЖНО СОХРАНЯТЬ ПОРЯДОК ПОСЛЕДОВАТЕЛЬНОСТИ ДОБАВЛЕНИЯ СЛУШАТЕЛЕЙ
 func InitEventManager(em *eventManager.EventManager, listeners *action.Listeners) {
-
-	em.AddEventListener("menu.refreshed", listeners.SaveMenu.Listen)
-	em.AddEventListener("menu.refreshed", listeners.SaveModifier.Listen)
-	em.AddEventListener("menu.refreshed", listeners.SaveProduct.Listen)
+	if listeners.SaveMenu != nil {
+		em.AddEventListener("menu.refreshed", listeners.SaveMenu.Listen)
+	}
+	if listeners.SaveModifier != nil {
+		em.AddEventListener("menu.refreshed", listeners.SaveModifier.Listen)
+	}
+	if listeners.SaveProduct != nil {
+		em.AddEventListener("menu.refreshed", listeners.SaveProduct.Listen)
+	}
+	if listeners.OrderProviderCreated != nil {
+		em.AddEventListener("order.provider.created", listeners.OrderProviderCreated.Listen)
+	}
+	if listeners.QueueOrderProviderCreated != nil {
+		em.AddEventListener("order.provider.created", listeners.QueueOrderProviderCreated.Listen)
+	}
+	if listeners.OrderStatusChanged != nil {
+		em.AddEventListener("order.status.changed", listeners.OrderStatusChanged.Listen)
+	}
+	if listeners.QueueOrderStatusChanged != nil {
+		em.AddEventListener("order.status.changed", listeners.QueueOrderStatusChanged.Listen)
+	}
 	em.Start()
 }
 

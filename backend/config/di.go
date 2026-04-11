@@ -11,6 +11,7 @@ import (
 	cartAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/cart/cart"
 	cartProductAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/cart/product"
 	healthAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/health"
+	iikoAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/iiko"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/menu"
 	"github.com/scrumno/scrumno-api/internal/api/v1/http/action/orders"
 	queueAction "github.com/scrumno/scrumno-api/internal/api/v1/http/action/queue"
@@ -39,16 +40,24 @@ import (
 
 	saveMenuListener "github.com/scrumno/scrumno-api/internal/menu/listener/save-menu"
 	createOrder "github.com/scrumno/scrumno-api/internal/orders/command/create-order"
-	addInQueue "github.com/scrumno/scrumno-api/internal/queue/command/add-in-queue"
-	queueEntity "github.com/scrumno/scrumno-api/internal/queue/entity"
-	getQueue "github.com/scrumno/scrumno-api/internal/queue/query/get-queue"
-	queueService "github.com/scrumno/scrumno-api/internal/queue/service"
+	createOrderDraft "github.com/scrumno/scrumno-api/internal/orders/command/create-order-draft"
+	payOrderDraft "github.com/scrumno/scrumno-api/internal/orders/command/pay-order-draft"
+	processProviderWebhook "github.com/scrumno/scrumno-api/internal/orders/command/process-provider-webhook"
+	ordersEntity "github.com/scrumno/scrumno-api/internal/orders/entity"
+	orderProviderCreatedListener "github.com/scrumno/scrumno-api/internal/orders/listener/order-provider-created"
+	orderStatusChangedListener "github.com/scrumno/scrumno-api/internal/orders/listener/order-status-changed"
+	ordersService "github.com/scrumno/scrumno-api/internal/orders/service"
 	saveModifier "github.com/scrumno/scrumno-api/internal/products/command/save-modifier"
 	saveProductCommand "github.com/scrumno/scrumno-api/internal/products/command/save-product"
 	modifier "github.com/scrumno/scrumno-api/internal/products/entity/modifier"
 	"github.com/scrumno/scrumno-api/internal/products/entity/product"
 	saveModifierListener "github.com/scrumno/scrumno-api/internal/products/listener/save-modifier"
 	saveProductListener "github.com/scrumno/scrumno-api/internal/products/listener/save-product"
+	queueEntity "github.com/scrumno/scrumno-api/internal/queue/entity"
+	queueOrderProviderCreatedListener "github.com/scrumno/scrumno-api/internal/queue/listener/order-provider-created"
+	queueOrderStatusChangedListener "github.com/scrumno/scrumno-api/internal/queue/listener/order-status-changed"
+	getQueue "github.com/scrumno/scrumno-api/internal/queue/query/get-queue"
+	queueService "github.com/scrumno/scrumno-api/internal/queue/service"
 	updateUserProfile "github.com/scrumno/scrumno-api/internal/users/command/update-user-profile"
 	conditionsUpdateProfilePolicy "github.com/scrumno/scrumno-api/internal/users/service/conditions-update-profile"
 	"github.com/scrumno/scrumno-api/shared/services/jwt"
@@ -149,6 +158,7 @@ func DI() (*action.Actions, *action.Listeners) {
 	categoryRepo := category.NewCategoryRepository(DB)
 	appConfigRepo := appConfig.NewAppConfigRepository(DB)
 	queueRepo := queueEntity.NewQueueRepository(DB)
+	orderRepo := ordersEntity.NewOrderRepository(DB)
 
 	jwtManager := jwt.NewManager(jwt.Config{
 		AccessSecret:    string(cfg.JWT.SecretKey),
@@ -173,6 +183,15 @@ func DI() (*action.Actions, *action.Listeners) {
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
 	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
+	createOrderDraftHandler := createOrderDraft.NewHandler(orderRepo)
+	paymentStubService := ordersService.NewPaymentStubService()
+	var commandStatusProvider *order.CommandStatusProvider
+	if iikoCfg != nil {
+		commandStatusProvider = order.NewCommandStatusProvider(iikoCfg)
+	}
+	payOrderDraftHandler := payOrderDraft.NewHandler(orderRepo, paymentStubService, createOrderHandler, commandStatusProvider, em)
+	processProviderWebhookHandler := processProviderWebhook.NewHandler(orderRepo, em)
+	ordersWsHub := ordersService.NewOrdersWebSocketHub()
 
 	saveProductHandler := saveProductCommand.NewHandler(productRepo)
 
@@ -187,7 +206,6 @@ func DI() (*action.Actions, *action.Listeners) {
 
 	saveModifierHandler := saveModifier.NewHandler(modifierRepo)
 	saveMenuHandler := saveMenu.NewHandler(sectionRepo, categoryRepo)
-	addInQueueHandler := addInQueue.NewHandler(queueRepo)
 
 	queueCalculator := queueService.NewOrdersQueueService(&queueEntity.OrdersQueueConfigTable{
 		KitchenParallelSlots:  1,
@@ -202,29 +220,24 @@ func DI() (*action.Actions, *action.Listeners) {
 	}, DB)
 	queueMapper := queueService.NewQueueOrderMapper(productRepo, modifierRepo)
 
-	var queueSync queueService.QueueSyncService
-	if iikoCfg != nil {
-		ordersByRevisionProvider := order.NewOrdersByRevisionProvider(iikoCfg)
-		ordersByRevisionAdapter := queueService.NewIikoOrdersByRevisionAdapter(ordersByRevisionProvider)
-		queueSync = queueService.NewQueueSyncService(appConfigRepo, queueRepo, ordersByRevisionAdapter)
-	}
-
 	getQueueAction := queueAction.NewGetQueueAction(
 		getWorkingTimeFetcher,
 		getQueueFetcher,
 		queueCalculator,
 		queueMapper,
-		queueSync,
+		nil,
 		getCartFetcher,
 	)
-	refreshQueueAction := queueAction.NewRefreshQueueAction(queueSync)
-	addInQueueAction := queueAction.NewAddInQueueAction(addInQueueHandler)
 	getNearestRangeAction := queueAction.NewGetNearestRangeAction(getQueueAction)
 	// query
 	getRefreshTokensFetcher := getRefreshTokensAvailable.NewFetcher(tokensRepo, jwtManager)
 	findUserByPhoneFetcher := findUserByPhone.NewFetcher(registrationRepo)
 	getSmsCodeSendAvailableFetcher := getSmsCodeSendAvailable.NewFetcher(codesRepo)
 	getSmsCodeFetcher := getSmsCode.NewFetcher(smsService)
+	createOrderDraftAction := orders.NewCreateOrderDraftAction(createOrderDraftHandler, findUserByPhoneFetcher, getCartFetcher)
+	payOrderDraftAction := orders.NewPayOrderDraftAction(payOrderDraftHandler)
+	ordersWebSocketAction := orders.NewOrdersWebSocketAction(ordersWsHub, orderRepo)
+	iikoOrderWebhookAction := iikoAction.NewOrderWebhookAction(processProviderWebhookHandler)
 
 	getCategoriesFetcher := getCategories.NewFetcher(categoryRepo)
 	getSectionsFetcher := getSections.NewFetcher(sectionRepo)
@@ -234,6 +247,10 @@ func DI() (*action.Actions, *action.Listeners) {
 	saveProductListener := saveProductListener.NewListener(saveProductHandler)
 	saveModifierListener := saveModifierListener.NewListener(saveModifierHandler)
 	saveMenuListener := saveMenuListener.NewListener(saveMenuHandler)
+	orderProviderCreatedOrderListener := orderProviderCreatedListener.NewListener(orderRepo, cartRepo)
+	orderStatusChangedOrderListener := orderStatusChangedListener.NewListener(orderRepo, ordersWsHub)
+	orderProviderCreatedQueueListener := queueOrderProviderCreatedListener.NewListener(queueRepo)
+	orderStatusChangedQueueListener := queueOrderStatusChangedListener.NewListener(queueRepo)
 
 	return &action.Actions{
 			CheckStatusConnectDB: healthAction.NewCheckStatusConnectDBAction(checkStatusFetcher),
@@ -251,7 +268,10 @@ func DI() (*action.Actions, *action.Listeners) {
 			SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
 
 			// orders
-			CreateOrder: orders.NewCreateOrderAction(createOrderHandler, findUserByPhoneFetcher, getCartFetcher),
+			CreateOrder:      orders.NewCreateOrderAction(createOrderHandler, findUserByPhoneFetcher, getCartFetcher),
+			CreateOrderDraft: createOrderDraftAction,
+			PayOrderDraft:    payOrderDraftAction,
+			OrdersWebSocket:  ordersWebSocketAction,
 
 			// cart
 			CreateCart: cartAction.NewCreateAction(createCartHandler),
@@ -263,18 +283,20 @@ func DI() (*action.Actions, *action.Listeners) {
 			UpdateProductFromCart: cartProductAction.NewUpdateAction(updateProductHandler),
 
 			// общие экшены для всех интеграционных систем
-			RefreshMenu: &refreshMenuAction,
-			GetMenu:     menu.NewGetMenuAction(getCategoriesFetcher, getSectionsFetcher, getProductsFetcher),
-			RefreshQueue: refreshQueueAction,
+			RefreshMenu:      &refreshMenuAction,
+			IikoOrderWebhook: iikoOrderWebhookAction,
+			GetMenu:          menu.NewGetMenuAction(getCategoriesFetcher, getSectionsFetcher, getProductsFetcher),
 
 			// queue
-			GetQueue:        getQueueAction,
-			AddInQueue:      addInQueueAction,
 			GetNearestRange: getNearestRangeAction,
 		},
 		&action.Listeners{
-			SaveProduct:  saveProductListener,
-			SaveModifier: saveModifierListener,
-			SaveMenu:     saveMenuListener,
+			SaveProduct:               saveProductListener,
+			SaveModifier:              saveModifierListener,
+			SaveMenu:                  saveMenuListener,
+			OrderProviderCreated:      orderProviderCreatedOrderListener,
+			OrderStatusChanged:        orderStatusChangedOrderListener,
+			QueueOrderProviderCreated: orderProviderCreatedQueueListener,
+			QueueOrderStatusChanged:   orderStatusChangedQueueListener,
 		}
 }

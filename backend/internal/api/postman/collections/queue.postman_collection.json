@@ -1,0 +1,63 @@
+{
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "info": {
+        "name": "/queue API",
+        "description": "Сгенерированная коллекция API запросов для самовывоза",
+        "version": "",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "queue",
+            "item": [
+                {
+                    "name": "nearest-range",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/queue/nearest-range",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "queue",
+                                "nearest-range"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"order_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"queue_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"user_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"venue_id\": \"00000000-0000-0000-0000-000000000000\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "type": "string",
+            "value": "http://localhost:8087/api/v1"
+        }
+    ]
+}

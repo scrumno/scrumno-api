@@ -69,11 +69,17 @@ func (a *GetQueueAction) Action(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusBadRequest)
 		return
 	}
-	if req.UserID == uuid.Nil || req.OrderID == uuid.Nil || req.QueueID == uuid.Nil || req.VenueID == uuid.Nil {
+	if req.UserID == uuid.Nil || req.VenueID == uuid.Nil {
 		utils.JSONResponse(w, GetQueueErrorResponse{
-			Error: "Поля order_id, user_id, queue_id и venue_id обязательны",
+			Error: "Поля user_id и venue_id обязательны",
 		}, http.StatusBadRequest)
 		return
+	}
+	if req.OrderID == uuid.Nil {
+		req.OrderID = uuid.New()
+	}
+	if req.QueueID == uuid.Nil {
+		req.QueueID = req.VenueID
 	}
 
 	result, err := a.estimateQueue(r.Context(), req)
@@ -183,4 +189,3 @@ func buildOrdersAhead(rows []queueEntity.OrdersQueueTable) []queueEntity.OrdersQ
 	}
 	return result
 }
-

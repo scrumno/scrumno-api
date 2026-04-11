@@ -1,7 +1,9 @@
 package config
 
 import (
+	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -20,8 +22,21 @@ func Load() *Config {
 		BaseURL:          os.Getenv("IIKO_BASE_URL"),
 		Login:            os.Getenv("IIKO_LOGIN"),
 		AccessToken:      os.Getenv("IIKO_ACCESS_TOKEN"),
-		OrganizationID:   uuid.MustParse(os.Getenv("IIKO_ORGANIZATION_ID")),
-		TerminalGroupID:  uuid.MustParse(os.Getenv("IIKO_TERMINAL_GROUP_ID")),
+		OrganizationID:   parseUUIDEnvOrNil("IIKO_ORGANIZATION_ID"),
+		TerminalGroupID:  parseUUIDEnvOrNil("IIKO_TERMINAL_GROUP_ID"),
 		SnapshotFilePath: os.Getenv("IIKO_SNAPSHOT_FILE_PATH"),
 	}
+}
+
+func parseUUIDEnvOrNil(key string) uuid.UUID {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return uuid.Nil
+	}
+	parsed, err := uuid.Parse(raw)
+	if err != nil {
+		slog.Warn("Некорректный UUID в env", "key", key, "value", raw, "error", err)
+		return uuid.Nil
+	}
+	return parsed
 }

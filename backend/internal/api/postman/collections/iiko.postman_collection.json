@@ -37,6 +37,37 @@
                             "mode": ""
                         }
                     }
+                },
+                {
+                    "name": "order-webhook",
+                    "request": {
+                        "url": {
+                            "raw": "{{base_url}}/iiko/order-webhook",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "iiko",
+                                "order-webhook"
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"correlationId\": \"00000000-0000-0000-0000-000000000000\",\n  \"eventInfo\": {\n    \"id\": null,\n    \"creationStatus\": \"\",\n    \"errorInfo\": {\n      \"message\": \"\"\n    },\n    \"order\": null\n  },\n  \"eventType\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
                 }
             ]
         }

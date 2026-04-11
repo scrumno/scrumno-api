@@ -15,6 +15,10 @@ type Handler struct {
 	orderBuilder  interfaces.OrderBodyBuilder
 }
 
+type Provider interface {
+	Handle(ctx context.Context, cmd Command) OrderDTO
+}
+
 func NewHandler(orderProvider interfaces.OrderProvider, orderBuilder interfaces.OrderBodyBuilder) *Handler {
 	return &Handler{
 		orderProvider: orderProvider,
@@ -111,11 +115,18 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) OrderDTO {
 		}
 	}
 
+	creationStatus := ""
+	if created.OrderInfo != nil {
+		creationStatus = created.OrderInfo.CreationStatus
+	}
+
 	return OrderDTO{
-		IsSuccess: true,
-		OrderID:   orderID.String(),
-		Response:  resp,
-		Error:     "",
+		IsSuccess:      true,
+		OrderID:        orderID.String(),
+		CorrelationID:  created.CorrelationID.String(),
+		CreationStatus: creationStatus,
+		Response:       resp,
+		Error:          "",
 	}
 }
 
@@ -131,8 +142,10 @@ func normalizePhone(phone string) string {
 }
 
 type OrderDTO struct {
-	IsSuccess bool   `json:"isSuccess"`
-	OrderID   string `json:"orderId"`
-	Response  any    `json:"response,omitempty"`
-	Error     string `json:"error,omitempty"`
+	IsSuccess      bool   `json:"isSuccess"`
+	OrderID        string `json:"orderId"`
+	CorrelationID  string `json:"correlationId,omitempty"`
+	CreationStatus string `json:"creationStatus,omitempty"`
+	Response       any    `json:"response,omitempty"`
+	Error          string `json:"error,omitempty"`
 }
