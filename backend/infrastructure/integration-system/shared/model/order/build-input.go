@@ -22,7 +22,7 @@ type BuildInput struct {
 }
 
 type Customer struct {
-	ID           uuid.UUID
+	ID           *uuid.UUID
 	Name         string
 	Surnmae      *string
 	CustomerType CustomerType

@@ -8,60 +8,43 @@ import (
 	iikoOrderModel "github.com/scrumno/scrumno-api/infrastructure/integration-system/iiko/order-delivery/model"
 	"github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/interfaces"
 	sharedOrder "github.com/scrumno/scrumno-api/infrastructure/integration-system/shared/model/order"
-	userEntity "github.com/scrumno/scrumno-api/internal/authorize/entity"
-	cartEntity "github.com/scrumno/scrumno-api/internal/cart/entity"
 )
 
 type Handler struct {
 	orderProvider interfaces.OrderProvider
 	orderBuilder  interfaces.OrderBodyBuilder
-	userReader    UserReader
-	cartReader    CartReader
 }
 
-type UserReader interface {
-	FindByPhone(ctx context.Context, phone string) (*userEntity.User, error)
-}
-
-type CartReader interface {
-	GetCartByUserId(ctx context.Context, userID uuid.UUID) (*cartEntity.Cart, error)
-}
-
-func NewHandler(orderProvider interfaces.OrderProvider, orderBuilder interfaces.OrderBodyBuilder, userReader UserReader, cartReader CartReader) *Handler {
+func NewHandler(orderProvider interfaces.OrderProvider, orderBuilder interfaces.OrderBodyBuilder) *Handler {
 	return &Handler{
 		orderProvider: orderProvider,
 		orderBuilder:  orderBuilder,
-		userReader:    userReader,
-		cartReader:    cartReader,
 	}
 }
 
-func (h *Handler) Handle(ctx context.Context, phone string, comment *string) OrderDTO {
-	u, err := h.userReader.FindByPhone(ctx, phone)
-	if err != nil || u == nil {
-		return OrderDTO{
-			IsSuccess: false,
-			Error:     "Пользователь не найден",
-		}
+func (h *Handler) Handle(ctx context.Context, cmd Command) OrderDTO {
+	phone := strings.TrimSpace(cmd.CustomerPhone)
+	if phone == "" {
+		return OrderDTO{IsSuccess: false, Error: "укажите номер телефона"}
+	}
+	if len(cmd.CartItems) == 0 {
+		return OrderDTO{IsSuccess: false, Error: "корзина пользователя пуста"}
 	}
 
-	cart, err := h.cartReader.GetCartByUserId(ctx, u.ID)
-	if err != nil || cart == nil {
-		return OrderDTO{
-			IsSuccess: false,
-			Error:     "Корзина не найдена",
-		}
+	customerName := strings.TrimSpace(cmd.CustomerFullName)
+	if customerName == "" {
+		customerName = normalizePhone(phone)
 	}
 
-	if len(cart.Items) == 0 {
-		return OrderDTO{
-			IsSuccess: false,
-			Error:     "Корзина пуста",
-		}
+	comment := ""
+	if cmd.OrderComment != nil {
+		comment = *cmd.OrderComment
 	}
 
-	var sourceKey string
-	sourceKey = "app"
+	sourceKey := strings.TrimSpace(cmd.SourceKey)
+	if sourceKey == "" {
+		sourceKey = "app"
+	}
 
 	var discountInfo []sharedOrder.DiscountsInfo
 	discountInfo = make([]sharedOrder.DiscountsInfo, 0, 10)
@@ -72,23 +55,23 @@ func (h *Handler) Handle(ctx context.Context, phone string, comment *string) Ord
 	input := &sharedOrder.BuildInput{
 		Customer: &sharedOrder.Customer{
 			CustomerType: sharedOrder.Regular,
-			Phone:        normalizePhone(u.Phone),
-			Name:         "ss",
-			ID:           uuid.Max,
+			Phone:        normalizePhone(phone),
+			Name:         customerName,
+			ID:           nil,
 		},
-		Items:        make([]sharedOrder.BuildItem, 0, len(cart.Items)),
+		Items:        make([]sharedOrder.BuildItem, 0, len(cmd.CartItems)),
 		Combos:       &combos,
 		Payment:      &payments,
 		DiscountInfo: &discountInfo,
 		SourceKey:    &sourceKey,
-		Comment:      *comment,
+		Comment:      comment,
 	}
 
-	for _, item := range cart.Items {
+	for _, item := range cmd.CartItems {
 		input.Items = append(input.Items, sharedOrder.BuildItem{
-			ProductID: item.ProductID.String(),
+			ProductID: item.ProductID,
 			Quantity:  item.Quantity,
-			Price:     item.TotalPrice,
+			Price:     item.Price,
 			Comment:   item.Comment,
 		})
 	}
