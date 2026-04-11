@@ -172,7 +172,7 @@ func DI() (*action.Actions, *action.Listeners) {
 	createAuthorizeTokensHandler := createAuthorizeTokens.NewHandler(tokensRepo, jwtManager)
 	createAuthorizeCodeHandler := createAuthorizeCode.NewHandler(codesRepo, createUniqueCodeSvc)
 
-	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder, registrationRepo, cartRepo)
+	createOrderHandler := createOrder.NewHandler(orderProvider, orderBuilder)
 
 	saveProductHandler := saveProductCommand.NewHandler(productRepo)
 
@@ -251,7 +251,7 @@ func DI() (*action.Actions, *action.Listeners) {
 			SmsCode:    authAction.NewAuthCodeAction(getSmsCodeSendAvailableFetcher, getSmsCodeFetcher, createAuthorizeCodeHandler),
 
 			// orders
-			CreateOrder: orders.NewCreateOrderAction(createOrderHandler),
+			CreateOrder: orders.NewCreateOrderAction(createOrderHandler, findUserByPhoneFetcher, getCartFetcher),
 
 			// cart
 			CreateCart: cartAction.NewCreateAction(createCartHandler),
