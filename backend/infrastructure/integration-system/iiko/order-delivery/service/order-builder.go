@@ -56,10 +56,14 @@ func (h *OrderBodyBuilder) BuildSetFromOrder(ctx context.Context, input *sharedO
 
 	var customer *model.Customer
 	if input.Customer != nil {
+		customerID := ""
+		if input.Customer.ID != nil {
+			customerID = input.Customer.ID.String()
+		}
 		customer = &model.Customer{
 			Type: string(input.Customer.CustomerType),
 			Name: input.Customer.Name,
-			ID:   input.Customer.ID.String(),
+			ID:   customerID,
 		}
 	}
 
@@ -139,6 +143,11 @@ func (h *OrderBodyBuilder) BuildSetFromOrder(ctx context.Context, input *sharedO
 		discountFinal = &discountData
 	}
 
+	orderPhone := ""
+	if input.Customer != nil {
+		orderPhone = input.Customer.Phone
+	}
+
 	cmd := &BuilderSetCommand{
 		OrganizationID:  h.config.OrganizationID,
 		TerminalGroupID: h.config.TerminalGroupID,
@@ -147,7 +156,7 @@ func (h *OrderBodyBuilder) BuildSetFromOrder(ctx context.Context, input *sharedO
 		},
 		Order: model.DeliveryOrder{
 			OrderServiceType: model.OrderServiceDeliveryByClient,
-			Phone:            input.Customer.Phone,
+			Phone:            orderPhone,
 			Items:            items,
 			Customer:         customer,
 			Comment:          input.Comment,

@@ -44,6 +44,7 @@ func main() {
 		&cartEntity.Cart{},
 		&cartEntity.CartItem{},
 		&user.User{},
+		&user.WalletBalance{},
 		&staffRole.StaffRole{},
 		&codes.AuthorizeCode{},
 		&authorizeTokens.AuthorizeToken{},

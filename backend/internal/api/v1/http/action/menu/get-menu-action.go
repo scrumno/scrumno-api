@@ -1,6 +1,8 @@
 package menu
 
 import (
+	"errors"
+	"io"
 	"net/http"
 	"reflect"
 
@@ -44,14 +46,23 @@ type GetMenuResponse struct {
 }
 
 func (a *GetMenuAction) Action(w http.ResponseWriter, r *http.Request) {
-	var req GetMenuRequest
-	err := utils.DecodeJSONBody(r, &req)
-	if err != nil {
-		utils.JSONResponse(w, map[string]any{
-			"isSuccess": false,
-			"error":     err.Error(),
-		}, http.StatusBadRequest)
-		return
+	req := GetMenuRequest{
+		Offset: 0,
+		Limit:  50,
+	}
+	if r.Body != nil {
+		err := utils.DecodeJSONBody(r, &req)
+		if err != nil && !errors.Is(err, io.EOF) {
+			utils.JSONResponse(w, map[string]any{
+				"isSuccess": false,
+				"error":     err.Error(),
+			}, http.StatusBadRequest)
+			return
+		}
+	}
+
+	if req.Limit <= 0 {
+		req.Limit = 50
 	}
 
 	categories, err := a.GetCategoriesFetcher.Fetch(r.Context(), req.Offset, req.Limit)

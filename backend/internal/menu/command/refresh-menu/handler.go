@@ -30,7 +30,6 @@ func (h *Handler) Handle() any {
 
 	const cmdName = "refresh-menu"
 
-	changed := true
 	menuForHash := menu
 	if v, ok := menu.(payloadMenuModel.RefreshMenuSuccessPayload); ok {
 		v.CorrelationID = ""
@@ -43,11 +42,10 @@ func (h *Handler) Handle() any {
 		// считаем, что меню могло измениться.
 		slog.Error("refresh-menu: failed to save snapshot/photos", "error", err)
 	} else {
-		changed = isChanged
-		slog.Info("refresh-menu: menu changed", "changed", changed)
+		slog.Info("refresh-menu: menu changed", "changed", isChanged)
 	}
 
-	if changed && h.eventManager != nil {
+	if h.eventManager != nil {
 		h.eventManager.EmitEvent("menu.refreshed", menu)
 	}
 

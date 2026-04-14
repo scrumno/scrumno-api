@@ -72,7 +72,12 @@ func (t *AuthRefreshRoundTripper) RoundTrip(req *http.Request) (*http.Response, 
 	// If refresh fails, we must return the original response (including resp.Body).
 	newToken, refreshErr := t.refreshTokenOnce(req.Context())
 	if refreshErr != nil || newToken == "" {
-		return resp, nil
+		body, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+		if refreshErr != nil {
+			return nil, fmt.Errorf("iiko unauthorized (status=%d), token refresh failed: %w; body=%s", resp.StatusCode, refreshErr, string(body))
+		}
+		return nil, fmt.Errorf("iiko unauthorized (status=%d), token refresh returned empty token; body=%s", resp.StatusCode, string(body))
 	}
 
 	// We will retry, so close the original body to avoid leaks.
